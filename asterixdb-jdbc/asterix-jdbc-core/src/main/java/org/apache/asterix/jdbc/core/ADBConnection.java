@@ -49,35 +49,64 @@ import java.util.logging.Logger;
 public class ADBConnection extends ADBWrapperSupport implements Connection {
 
     final ADBProtocol protocol;
-
     final String url;
-
     final String databaseVersion;
-
+    final ADBDriverProperty.CatalogDataverseMode catalogDataverseMode;
+    final boolean catalogIncludesSchemaless;
+    final boolean sqlCompatMode;
     private final AtomicBoolean closed;
-
     private final ConcurrentLinkedQueue<ADBStatement> statements;
-
     private volatile SQLWarning warning;
-
     private volatile ADBMetaStatement metaStatement;
-
-    volatile String catalog;
-
-    volatile String schema;
+    private volatile String catalog;
+    private volatile String schema;
 
     // Lifecycle
 
-    protected ADBConnection(ADBProtocol protocol, String url, String databaseVersion, String catalog, String schema,
-            SQLWarning connectWarning) {
+    protected ADBConnection(ADBProtocol protocol, String url, String databaseVersion, String dataverseCanonicalName,
+            Map<ADBDriverProperty, Object> properties, SQLWarning connectWarning) throws SQLException {
         this.url = Objects.requireNonNull(url);
         this.protocol = Objects.requireNonNull(protocol);
         this.databaseVersion = databaseVersion;
         this.statements = new ConcurrentLinkedQueue<>();
         this.warning = connectWarning;
-        this.catalog = catalog;
-        this.schema = schema;
         this.closed = new AtomicBoolean(false);
+        this.sqlCompatMode = (Boolean) ADBDriverProperty.Common.SQL_COMPAT_MODE.fetchPropertyValue(properties);
+        this.catalogDataverseMode = getCatalogDataverseMode(protocol, properties);
+        this.catalogIncludesSchemaless =
+                (Boolean) ADBDriverProperty.Common.CATALOG_INCLUDES_SCHEMALESS.fetchPropertyValue(properties);
+        initCatalogSchema(protocol, dataverseCanonicalName);
+    }
+
+    private void initCatalogSchema(ADBProtocol protocol, String dataverseCanonicalName) throws SQLException {
+        switch (catalogDataverseMode) {
+            case CATALOG:
+                catalog = dataverseCanonicalName == null || dataverseCanonicalName.isEmpty()
+                        ? ADBProtocol.DEFAULT_DATAVERSE : dataverseCanonicalName;
+                // schema = null
+                break;
+            case CATALOG_SCHEMA:
+                if (dataverseCanonicalName == null || dataverseCanonicalName.isEmpty()) {
+                    catalog = ADBProtocol.DEFAULT_DATAVERSE;
+                    // schema = null
+                } else {
+                    String[] parts = dataverseCanonicalName.split("/");
+                    switch (parts.length) {
+                        case 1:
+                            catalog = parts[0];
+                            break;
+                        case 2:
+                            catalog = parts[0];
+                            schema = parts[1];
+                            break;
+                        default:
+                            throw protocol.getErrorReporter().errorInConnection(dataverseCanonicalName); //TODO:FIXME
+                    }
+                }
+                break;
+            default:
+                throw new IllegalStateException();
+        }
     }
 
     @Override
@@ -239,7 +268,7 @@ public class ADBConnection extends ADBWrapperSupport implements Connection {
     }
 
     private ADBStatement createStatementImpl() {
-        ADBStatement stmt = new ADBStatement(this, catalog, schema);
+        ADBStatement stmt = new ADBStatement(this);
         registerStatement(stmt);
         return stmt;
     }
@@ -280,7 +309,7 @@ public class ADBConnection extends ADBWrapperSupport implements Connection {
     }
 
     private ADBPreparedStatement prepareStatementImpl(String sql) throws SQLException {
-        ADBPreparedStatement stmt = new ADBPreparedStatement(this, sql, catalog, schema);
+        ADBPreparedStatement stmt = new ADBPreparedStatement(this, sql);
         registerStatement(stmt);
         return stmt;
     }
@@ -328,7 +357,34 @@ public class ADBConnection extends ADBWrapperSupport implements Connection {
     @Override
     public void setSchema(String schema) throws SQLException {
         checkClosed();
+        if (catalogDataverseMode == ADBDriverProperty.CatalogDataverseMode.CATALOG
+                && (schema != null && !schema.isEmpty())) {
+            throw getErrorReporter().errorInConnection(schema); //TODO:FIXME:REVIEW make no-op?
+        }
         this.schema = schema;
+    }
+
+    String getDataverseCanonicalName() {
+        switch (catalogDataverseMode) {
+            case CATALOG:
+                return catalog;
+            case CATALOG_SCHEMA:
+                String c = catalog;
+                String s = schema;
+                return s == null ? c : c + "/" + s;
+            default:
+                throw new IllegalStateException();
+        }
+    }
+
+    private static ADBDriverProperty.CatalogDataverseMode getCatalogDataverseMode(ADBProtocol protocol,
+            Map<ADBDriverProperty, Object> properties) throws SQLException {
+        int mode = ((Number) ADBDriverProperty.Common.CATALOG_DATAVERSE_MODE.fetchPropertyValue(properties)).intValue();
+        try {
+            return ADBDriverProperty.CatalogDataverseMode.valueOf(mode);
+        } catch (IllegalArgumentException e) {
+            throw protocol.getErrorReporter().errorInConnection(String.valueOf(mode)); //TODO:FIXME
+        }
     }
 
     // Statement lifecycle

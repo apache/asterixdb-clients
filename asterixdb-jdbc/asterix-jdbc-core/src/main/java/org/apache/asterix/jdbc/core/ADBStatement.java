@@ -31,10 +31,11 @@ import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Duration;
-import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Period;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -43,6 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Queue;
+import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
@@ -63,19 +65,21 @@ import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
 
 class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
 
+    static final List<Class<?>> SET_OBJECT_ATOMIC_EXTRA =
+            Arrays.asList(SqlCalendarDate.class, SqlCalendarTime.class, SqlCalendarTimestamp.class);
+
     static final List<Class<?>> SET_OBJECT_NON_ATOMIC = Arrays.asList(Object[].class, Collection.class, Map.class);
 
     static final Map<Class<?>, AbstractValueSerializer> SERIALIZER_MAP = createSerializerMap();
 
     protected final ADBConnection connection;
-    protected final String catalog;
-    protected final String schema;
 
     protected final AtomicBoolean closed = new AtomicBoolean(false);
     protected volatile boolean closeOnCompletion;
 
     protected int queryTimeoutSeconds;
     protected long maxRows;
+    private volatile UUID executionId;
 
     // common result fields
     protected int updateCount = -1;
@@ -91,12 +95,11 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
 
     // Lifecycle
 
-    ADBStatement(ADBConnection connection, String catalog, String schema) {
+    ADBStatement(ADBConnection connection) {
         this.connection = Objects.requireNonNull(connection);
-        this.catalog = catalog;
-        this.schema = schema;
         this.resultSetsWithResources = new ConcurrentLinkedQueue<>();
         this.resultSetsWithoutResources = new ConcurrentLinkedQueue<>();
+        resetExecutionId();
     }
 
     @Override
@@ -153,16 +156,22 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
 
     protected ADBResultSet executeQueryImpl(String sql, List<?> args) throws SQLException {
         // note: we're not assigning executeResponse field at this method
-        ADBProtocol.QueryServiceResponse response =
-                connection.protocol.submitStatement(sql, args, true, false, queryTimeoutSeconds, catalog, schema);
-        boolean isQuery = connection.protocol.isStatementCategory(response,
-                ADBProtocol.QueryServiceResponse.StatementCategory.QUERY);
-        if (!isQuery) {
-            throw getErrorReporter().errorInvalidStatementCategory();
+        try {
+            ADBProtocol.SubmitStatementOptions stmtOptions = createSubmitStatementOptions();
+            stmtOptions.forceReadOnly = true;
+            ADBProtocol.QueryServiceResponse response =
+                    connection.protocol.submitStatement(sql, args, executionId, stmtOptions);
+            boolean isQuery = connection.protocol.isStatementCategory(response,
+                    ADBProtocol.QueryServiceResponse.StatementCategory.QUERY);
+            if (!isQuery) {
+                throw getErrorReporter().errorInvalidStatementCategory();
+            }
+            warnings = connection.protocol.getWarningIfExists(response);
+            updateCount = -1;
+            return fetchResultSet(response);
+        } finally {
+            resetExecutionId();
         }
-        warnings = connection.protocol.getWarningIfExists(response);
-        updateCount = -1;
-        return fetchResultSet(response);
     }
 
     @Override
@@ -208,17 +217,22 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
     }
 
     protected int executeUpdateImpl(String sql, List<Object> args) throws SQLException {
-        ADBProtocol.QueryServiceResponse response =
-                connection.protocol.submitStatement(sql, args, false, false, queryTimeoutSeconds, catalog, schema);
-        boolean isQuery = connection.protocol.isStatementCategory(response,
-                ADBProtocol.QueryServiceResponse.StatementCategory.QUERY);
-        // TODO: remove result set on the server (both query and update returning cases)
-        if (isQuery) {
-            throw getErrorReporter().errorInvalidStatementCategory();
+        try {
+            ADBProtocol.SubmitStatementOptions stmtOptions = createSubmitStatementOptions();
+            ADBProtocol.QueryServiceResponse response =
+                    connection.protocol.submitStatement(sql, args, executionId, stmtOptions);
+            boolean isQuery = connection.protocol.isStatementCategory(response,
+                    ADBProtocol.QueryServiceResponse.StatementCategory.QUERY);
+            // TODO: remove result set on the server (both query and update returning cases)
+            if (isQuery) {
+                throw getErrorReporter().errorInvalidStatementCategory();
+            }
+            warnings = connection.protocol.getWarningIfExists(response);
+            updateCount = connection.protocol.getUpdateCount(response);
+            return updateCount;
+        } finally {
+            resetExecutionId();
         }
-        warnings = connection.protocol.getWarningIfExists(response);
-        updateCount = connection.protocol.getUpdateCount(response);
-        return updateCount;
     }
 
     @Override
@@ -243,25 +257,31 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
     }
 
     protected boolean executeImpl(String sql, List<Object> args) throws SQLException {
-        ADBProtocol.QueryServiceResponse response =
-                connection.protocol.submitStatement(sql, args, false, false, queryTimeoutSeconds, catalog, schema);
-        warnings = connection.protocol.getWarningIfExists(response);
-        boolean isQuery = connection.protocol.isStatementCategory(response,
-                ADBProtocol.QueryServiceResponse.StatementCategory.QUERY);
-        if (isQuery) {
-            updateCount = -1;
-            executeResponse = response;
-            return true;
-        } else {
-            updateCount = connection.protocol.getUpdateCount(response);
-            executeResponse = null;
-            return false;
+        try {
+            ADBProtocol.SubmitStatementOptions stmtOptions = createSubmitStatementOptions();
+            ADBProtocol.QueryServiceResponse response =
+                    connection.protocol.submitStatement(sql, args, executionId, stmtOptions);
+            warnings = connection.protocol.getWarningIfExists(response);
+            boolean isQuery = connection.protocol.isStatementCategory(response,
+                    ADBProtocol.QueryServiceResponse.StatementCategory.QUERY);
+            if (isQuery) {
+                updateCount = -1;
+                executeResponse = response;
+                return true;
+            } else {
+                updateCount = connection.protocol.getUpdateCount(response);
+                executeResponse = null;
+                return false;
+            }
+        } finally {
+            resetExecutionId();
         }
     }
 
     @Override
     public void cancel() throws SQLException {
-        throw getErrorReporter().errorMethodNotSupported(Statement.class, "cancel");
+        checkClosed();
+        connection.protocol.cancelStatementExecution(executionId);
     }
 
     @Override
@@ -282,6 +302,18 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
     @Override
     public void setEscapeProcessing(boolean enable) throws SQLException {
         checkClosed();
+    }
+
+    private void resetExecutionId() {
+        executionId = UUID.randomUUID();
+    }
+
+    protected ADBProtocol.SubmitStatementOptions createSubmitStatementOptions() {
+        ADBProtocol.SubmitStatementOptions stmtOptions = connection.protocol.createSubmitStatementOptions();
+        stmtOptions.dataverseName = connection.getDataverseCanonicalName();
+        stmtOptions.sqlCompatMode = connection.sqlCompatMode;
+        stmtOptions.timeoutSeconds = queryTimeoutSeconds;
+        return stmtOptions;
     }
 
     // Batch execution
@@ -635,7 +667,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
     }
 
     static boolean isSetObjectCompatible(Class<?> cls) {
-        if (ADBRowStore.OBJECT_ACCESSORS_ATOMIC.containsKey(cls)) {
+        if (ADBRowStore.OBJECT_ACCESSORS_ATOMIC.containsKey(cls) || SET_OBJECT_ATOMIC_EXTRA.contains(cls)) {
             return true;
         }
         for (Class<?> aClass : SET_OBJECT_NON_ATOMIC) {
@@ -657,11 +689,14 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
         registerSerializer(serializerMap, createDoubleSerializer());
         registerSerializer(serializerMap, createStringSerializer());
         registerSerializer(serializerMap, createSqlDateSerializer());
+        registerSerializer(serializerMap, createSqlDateWithCalendarSerializer());
         registerSerializer(serializerMap, createLocalDateSerializer());
         registerSerializer(serializerMap, createSqlTimeSerializer());
+        registerSerializer(serializerMap, createSqlCalendarTimeSerializer());
         registerSerializer(serializerMap, createLocalTimeSerializer());
         registerSerializer(serializerMap, createSqlTimestampSerializer());
-        registerSerializer(serializerMap, createInstantSerializer());
+        registerSerializer(serializerMap, createSqlCalendarTimestampSerializer());
+        registerSerializer(serializerMap, createLocalDateTimeSerializer());
         registerSerializer(serializerMap, createPeriodSerializer());
         registerSerializer(serializerMap, createDurationSerializer());
         return serializerMap;
@@ -720,7 +755,22 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
             @Override
             protected void serializeNonTaggedValue(Object value, StringBuilder out) {
                 long millis = ((Date) value).getTime();
-                out.append(millis);
+                long millisAdjusted = getDatetimeChrononAdjusted(millis, TimeZone.getDefault());
+                long days = TimeUnit.MILLISECONDS.toDays(millisAdjusted);
+                out.append(days);
+            }
+        };
+    }
+
+    private static ATaggedValueSerializer createSqlDateWithCalendarSerializer() {
+        return new ATaggedValueSerializer(SqlCalendarDate.class, ADBDatatype.DATE) {
+            @Override
+            protected void serializeNonTaggedValue(Object value, StringBuilder out) {
+                SqlCalendarDate dateWithCalendar = (SqlCalendarDate) value;
+                long millis = dateWithCalendar.date.getTime();
+                long millisAdjusted = getDatetimeChrononAdjusted(millis, dateWithCalendar.timeZone);
+                long days = TimeUnit.MILLISECONDS.toDays(millisAdjusted);
+                out.append(days);
             }
         };
     }
@@ -729,8 +779,8 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
         return new ATaggedValueSerializer(java.time.LocalDate.class, ADBDatatype.DATE) {
             @Override
             protected void serializeNonTaggedValue(Object value, StringBuilder out) {
-                long millis = TimeUnit.DAYS.toMillis(((LocalDate) value).toEpochDay());
-                out.append(millis);
+                long days = ((LocalDate) value).toEpochDay();
+                out.append(days);
             }
         };
     }
@@ -740,7 +790,22 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
             @Override
             protected void serializeNonTaggedValue(Object value, StringBuilder out) {
                 long millis = ((Time) value).getTime();
-                out.append(millis);
+                long millisAdjusted = getDatetimeChrononAdjusted(millis, TimeZone.getDefault());
+                long timeMillis = millisAdjusted - TimeUnit.DAYS.toMillis(TimeUnit.MILLISECONDS.toDays(millisAdjusted));
+                out.append(timeMillis);
+            }
+        };
+    }
+
+    private static ATaggedValueSerializer createSqlCalendarTimeSerializer() {
+        return new ATaggedValueSerializer(SqlCalendarTime.class, ADBDatatype.TIME) {
+            @Override
+            protected void serializeNonTaggedValue(Object value, StringBuilder out) {
+                SqlCalendarTime timeWithCalendar = (SqlCalendarTime) value;
+                long millis = timeWithCalendar.time.getTime();
+                long millisAdjusted = getDatetimeChrononAdjusted(millis, timeWithCalendar.timeZone);
+                long timeMillis = millisAdjusted - TimeUnit.DAYS.toMillis(TimeUnit.MILLISECONDS.toDays(millisAdjusted));
+                out.append(timeMillis);
             }
         };
     }
@@ -749,8 +814,9 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
         return new ATaggedValueSerializer(java.time.LocalTime.class, ADBDatatype.TIME) {
             @Override
             protected void serializeNonTaggedValue(Object value, StringBuilder out) {
-                long millis = TimeUnit.NANOSECONDS.toMillis(((LocalTime) value).toNanoOfDay());
-                out.append(millis);
+                long nanos = ((LocalTime) value).toNanoOfDay();
+                long timeMillis = TimeUnit.NANOSECONDS.toMillis(nanos);
+                out.append(timeMillis);
             }
         };
     }
@@ -760,16 +826,29 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
             @Override
             protected void serializeNonTaggedValue(Object value, StringBuilder out) {
                 long millis = ((Timestamp) value).getTime();
-                out.append(millis);
+                long millisAdjusted = getDatetimeChrononAdjusted(millis, TimeZone.getDefault());
+                out.append(millisAdjusted);
             }
         };
     }
 
-    private static ATaggedValueSerializer createInstantSerializer() {
-        return new ATaggedValueSerializer(java.time.Instant.class, ADBDatatype.DATETIME) {
+    private static ATaggedValueSerializer createSqlCalendarTimestampSerializer() {
+        return new ATaggedValueSerializer(SqlCalendarTimestamp.class, ADBDatatype.DATETIME) {
             @Override
             protected void serializeNonTaggedValue(Object value, StringBuilder out) {
-                long millis = ((Instant) value).toEpochMilli();
+                SqlCalendarTimestamp timestampWithCalendar = (SqlCalendarTimestamp) value;
+                long millis = timestampWithCalendar.timestamp.getTime();
+                long millisAdjusted = getDatetimeChrononAdjusted(millis, timestampWithCalendar.timeZone);
+                out.append(millisAdjusted);
+            }
+        };
+    }
+
+    private static ATaggedValueSerializer createLocalDateTimeSerializer() {
+        return new ATaggedValueSerializer(java.time.LocalDateTime.class, ADBDatatype.DATETIME) {
+            @Override
+            protected void serializeNonTaggedValue(Object value, StringBuilder out) {
+                long millis = ((LocalDateTime) value).atZone(TZ_UTC).toInstant().toEpochMilli();
                 out.append(millis);
             }
         };
@@ -812,6 +891,8 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
 
     private static abstract class ATaggedValueSerializer extends AbstractValueSerializer {
 
+        protected static ZoneId TZ_UTC = ZoneId.of("UTC");
+
         protected final ADBDatatype adbType;
 
         protected ATaggedValueSerializer(Class<?> javaType, ADBDatatype adbType) {
@@ -841,6 +922,47 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
 
         private static char hex(int i) {
             return (char) (i + (i < 10 ? '0' : ('A' - 10)));
+        }
+
+        protected long getDatetimeChrononAdjusted(long datetimeChrononInMillis, TimeZone tz) {
+            int tzOffset = tz.getOffset(datetimeChrononInMillis);
+            return datetimeChrononInMillis + tzOffset;
+        }
+    }
+
+    static abstract class AbstractSqlCalendarDateTime {
+        final TimeZone timeZone;
+
+        AbstractSqlCalendarDateTime(TimeZone timeZone) {
+            this.timeZone = timeZone;
+        }
+    }
+
+    static final class SqlCalendarDate extends AbstractSqlCalendarDateTime {
+        final Date date;
+
+        SqlCalendarDate(Date date, TimeZone timeZone) {
+            super(timeZone);
+            this.date = date;
+        }
+    }
+
+    static final class SqlCalendarTime extends AbstractSqlCalendarDateTime {
+        final Time time;
+
+        SqlCalendarTime(Time time, TimeZone timeZone) {
+            super(timeZone);
+            this.time = time;
+        }
+    }
+
+    static final class SqlCalendarTimestamp extends AbstractSqlCalendarDateTime {
+        final Timestamp timestamp;
+
+        SqlCalendarTimestamp(Timestamp timestamp, TimeZone timeZone) {
+            super(timeZone);
+            this.timestamp = timestamp;
+
         }
     }
 }

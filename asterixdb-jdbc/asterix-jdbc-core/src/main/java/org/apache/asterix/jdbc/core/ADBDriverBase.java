@@ -154,21 +154,6 @@ public abstract class ADBDriverBase {
             port = defaultApiPort;
         }
 
-        String catalog = ADBProtocol.DEFAULT_DATAVERSE;
-        String schema = null;
-        String path = subUri.getPath();
-        if (path != null && path.length() > 1 && path.startsWith("/")) {
-            String[] dataverse = path.substring(1).split("/");
-            switch (dataverse.length) {
-                case 2:
-                    schema = dataverse[1];
-                    // fall thru to 1
-                case 1:
-                    catalog = dataverse[0];
-                    break;
-            }
-        }
-
         List<NameValuePair> urlParams = URLEncodedUtils.parse(subUri, StandardCharsets.UTF_8);
 
         ADBDriverContext driverContext = getOrCreateDriverContext();
@@ -177,10 +162,14 @@ public abstract class ADBDriverBase {
         parseConnectionProperties(urlParams, info, driverContext, properties, warning);
         warning = warning.getNextWarning() != null ? warning.getNextWarning() : null;
 
+        String path = subUri.getPath();
+        String dataverseCanonicalName =
+                path != null && path.length() > 1 && path.startsWith("/") ? path.substring(1) : null;
+
         ADBProtocol protocol = createProtocol(host, port, properties, driverContext);
         try {
             String databaseVersion = protocol.connect();
-            return createConnection(protocol, url, databaseVersion, catalog, schema, warning);
+            return createConnection(protocol, url, databaseVersion, dataverseCanonicalName, properties, warning);
         } catch (SQLException e) {
             try {
                 protocol.close();
@@ -248,8 +237,9 @@ public abstract class ADBDriverBase {
         return new ADBProtocol(host, port, properties, driverContext);
     }
 
-    protected ADBConnection createConnection(ADBProtocol protocol, String url, String databaseVersion, String catalog,
-            String schema, SQLWarning connectWarning) {
-        return new ADBConnection(protocol, url, databaseVersion, catalog, schema, connectWarning);
+    protected ADBConnection createConnection(ADBProtocol protocol, String url, String databaseVersion,
+            String dataverseCanonicalName, Map<ADBDriverProperty, Object> properties, SQLWarning connectWarning)
+            throws SQLException {
+        return new ADBConnection(protocol, url, databaseVersion, dataverseCanonicalName, properties, connectWarning);
     }
 }

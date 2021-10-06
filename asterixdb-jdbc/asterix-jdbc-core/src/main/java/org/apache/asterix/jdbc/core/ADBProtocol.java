@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -50,10 +51,12 @@ import org.apache.http.client.AuthCache;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpOptions;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.config.SocketConfig;
 import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.entity.ContentProducer;
@@ -84,8 +87,9 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 
 public class ADBProtocol {
 
-    private static final String QUERY_ENDPOINT_PATH = "/query/service";
+    private static final String QUERY_SERVICE_ENDPOINT_PATH = "/query/service";
     private static final String QUERY_RESULT_ENDPOINT_PATH = "/query/service/result";
+    private static final String ACTIVE_REQUESTS_ENDPOINT_PATH = "/admin/requests/running";
 
     private static final String STATEMENT = "statement";
     private static final String ARGS = "args";
@@ -98,6 +102,8 @@ public class ADBProtocol {
     private static final String CLIENT_TYPE = "client-type";
     private static final String PLAN_FORMAT = "plan-format";
     private static final String MAX_WARNINGS = "max-warnings";
+    private static final String SQL_COMPAT = "sql-compat";
+    private static final String CLIENT_CONTEXT_ID = "client_context_id";
 
     private static final String MODE_DEFERRED = "deferred";
     private static final String CLIENT_TYPE_JDBC = "jdbc";
@@ -116,20 +122,23 @@ public class ADBProtocol {
     final CloseableHttpClient httpClient;
     final URI queryEndpoint;
     final URI queryResultEndpoint;
+    final URI activeRequestsEndpoint;
     final String user;
     final int maxWarnings;
 
     protected ADBProtocol(String host, int port, Map<ADBDriverProperty, Object> params, ADBDriverContext driverContext)
             throws SQLException {
-        URI queryEndpoint = createEndpointUri(host, port, QUERY_ENDPOINT_PATH, driverContext.errorReporter);
+        URI queryEndpoint = createEndpointUri(host, port, getQueryServiceEndpointPath(), driverContext.errorReporter);
         URI queryResultEndpoint =
-                createEndpointUri(host, port, QUERY_RESULT_ENDPOINT_PATH, driverContext.errorReporter);
+                createEndpointUri(host, port, getQueryResultEndpointPath(), driverContext.errorReporter);
+        URI activeRequestsEndpoint =
+                createEndpointUri(host, port, getActiveRequestsEndpointPath(), driverContext.errorReporter);
         PoolingHttpClientConnectionManager httpConnectionManager = new PoolingHttpClientConnectionManager();
         int maxConnections = Math.max(16, Runtime.getRuntime().availableProcessors());
         httpConnectionManager.setDefaultMaxPerRoute(maxConnections);
         httpConnectionManager.setMaxTotal(maxConnections);
         SocketConfig.Builder socketConfigBuilder = null;
-        Number socketTimeoutMillis = (Number) params.get(ADBDriverProperty.Common.SOCKET_TIMEOUT);
+        Number socketTimeoutMillis = (Number) ADBDriverProperty.Common.SOCKET_TIMEOUT.fetchPropertyValue(params);
         if (socketTimeoutMillis != null) {
             socketConfigBuilder = SocketConfig.custom();
             socketConfigBuilder.setSoTimeout(socketTimeoutMillis.intValue());
@@ -138,7 +147,7 @@ public class ADBProtocol {
             httpConnectionManager.setDefaultSocketConfig(socketConfigBuilder.build());
         }
         RequestConfig.Builder requestConfigBuilder = RequestConfig.custom();
-        Number connectTimeoutMillis = (Number) params.get(ADBDriverProperty.Common.CONNECT_TIMEOUT);
+        Number connectTimeoutMillis = (Number) ADBDriverProperty.Common.CONNECT_TIMEOUT.fetchPropertyValue(params);
         if (connectTimeoutMillis != null) {
             requestConfigBuilder.setConnectionRequestTimeout(connectTimeoutMillis.intValue());
             requestConfigBuilder.setConnectTimeout(connectTimeoutMillis.intValue());
@@ -152,18 +161,17 @@ public class ADBProtocol {
         httpClientBuilder.setConnectionManager(httpConnectionManager);
         httpClientBuilder.setConnectionManagerShared(true);
         httpClientBuilder.setDefaultRequestConfig(requestConfig);
-        String user = (String) params.get(ADBDriverProperty.Common.USER);
+        String user = (String) ADBDriverProperty.Common.USER.fetchPropertyValue(params);
         if (user != null) {
-            String password = (String) params.get(ADBDriverProperty.Common.PASSWORD);
+            String password = (String) ADBDriverProperty.Common.PASSWORD.fetchPropertyValue(params);
             httpClientBuilder.setDefaultCredentialsProvider(createCredentialsProvider(user, password));
         }
-
-        Number maxWarnings = ((Number) params.getOrDefault(ADBDriverProperty.Common.MAX_WARNINGS,
-                ADBDriverProperty.Common.MAX_WARNINGS.getDefaultValue()));
+        Number maxWarnings = (Number) ADBDriverProperty.Common.MAX_WARNINGS.fetchPropertyValue(params);
 
         this.user = user;
         this.queryEndpoint = queryEndpoint;
         this.queryResultEndpoint = queryResultEndpoint;
+        this.activeRequestsEndpoint = activeRequestsEndpoint;
         this.httpConnectionManager = httpConnectionManager;
         this.httpClient = httpClientBuilder.build();
         this.httpClientContext = createHttpClientContext(queryEndpoint);
@@ -239,8 +247,8 @@ public class ADBProtocol {
         }
     }
 
-    QueryServiceResponse submitStatement(String sql, List<?> args, boolean forceReadOnly, boolean compileOnly,
-            int timeoutSeconds, String catalog, String schema) throws SQLException {
+    QueryServiceResponse submitStatement(String sql, List<?> args, UUID executionId, SubmitStatementOptions options)
+            throws SQLException {
         HttpPost httpPost = new HttpPost(queryEndpoint);
         httpPost.setHeader(HttpHeaders.ACCEPT, ContentType.APPLICATION_JSON
                 .withParameters(new BasicNameValuePair(FORMAT_LOSSLESS_ADM, Boolean.TRUE.toString())).toString());
@@ -255,17 +263,23 @@ public class ADBProtocol {
             jsonGen.writeBooleanField(SIGNATURE, true);
             jsonGen.writeStringField(PLAN_FORMAT, PLAN_FORMAT_STRING);
             jsonGen.writeNumberField(MAX_WARNINGS, maxWarnings);
-            if (compileOnly) {
+            if (options.compileOnly) {
                 jsonGen.writeBooleanField(COMPILE_ONLY, true);
             }
-            if (forceReadOnly) {
+            if (options.forceReadOnly) {
                 jsonGen.writeBooleanField(READ_ONLY, true);
             }
-            if (timeoutSeconds > 0) {
-                jsonGen.writeStringField(TIMEOUT, timeoutSeconds + "s");
+            if (options.sqlCompatMode) {
+                jsonGen.writeBooleanField(SQL_COMPAT, true);
             }
-            if (catalog != null) {
-                jsonGen.writeStringField(DATAVERSE, schema != null ? catalog + "/" + schema : catalog);
+            if (options.timeoutSeconds > 0) {
+                jsonGen.writeStringField(TIMEOUT, options.timeoutSeconds + "s");
+            }
+            if (options.dataverseName != null) {
+                jsonGen.writeStringField(DATAVERSE, options.dataverseName);
+            }
+            if (executionId != null) {
+                jsonGen.writeStringField(CLIENT_CONTEXT_ID, executionId.toString());
             }
             if (args != null && !args.isEmpty()) {
                 jsonGen.writeFieldName(ARGS);
@@ -279,11 +293,9 @@ public class ADBProtocol {
             throw getErrorReporter().errorInRequestGeneration(e);
         }
 
-        System.err.printf("<ADB_DRIVER_SQL>%n%s%n</ADB_DRIVER_SQL>%n", sql);
-
         if (getLogger().isLoggable(Level.FINE)) {
-            getLogger().log(Level.FINE, String.format("%s { %s } with args { %s }", compileOnly ? "compile" : "execute",
-                    sql, args != null ? args : ""));
+            getLogger().log(Level.FINE, String.format("%s { %s } with args { %s }",
+                    options.compileOnly ? "compile" : "execute", sql, args != null ? args : ""));
         }
 
         httpPost.setEntity(new EntityTemplateImpl(baos, ContentType.APPLICATION_JSON));
@@ -294,6 +306,21 @@ public class ADBProtocol {
         } catch (IOException e) {
             throw getErrorReporter().errorInConnection(e);
         }
+    }
+
+    public static class SubmitStatementOptions {
+        public String dataverseName;
+        public int timeoutSeconds;
+        public boolean forceReadOnly;
+        public boolean compileOnly;
+        public boolean sqlCompatMode;
+
+        private SubmitStatementOptions() {
+        }
+    }
+
+    SubmitStatementOptions createSubmitStatementOptions() {
+        return new SubmitStatementOptions();
     }
 
     private QueryServiceResponse handlePostQueryResponse(CloseableHttpResponse httpResponse)
@@ -419,6 +446,33 @@ public class ADBProtocol {
         }
     }
 
+    void cancelStatementExecution(UUID executionId) throws SQLException {
+        HttpDelete httpDelete;
+        try {
+            URIBuilder uriBuilder = new URIBuilder(activeRequestsEndpoint);
+            uriBuilder.setParameter(CLIENT_CONTEXT_ID, String.valueOf(executionId));
+            httpDelete = new HttpDelete(uriBuilder.build());
+        } catch (URISyntaxException e) {
+            throw getErrorReporter().errorInRequestURIGeneration(e);
+        }
+
+        try (CloseableHttpResponse httpResponse = httpClient.execute(httpDelete, httpClientContext)) {
+            int httpStatus = httpResponse.getStatusLine().getStatusCode();
+            switch (httpStatus) {
+                case HttpStatus.SC_OK:
+                case HttpStatus.SC_NOT_FOUND:
+                    break;
+                case HttpStatus.SC_UNAUTHORIZED:
+                case HttpStatus.SC_FORBIDDEN:
+                    throw getErrorReporter().errorAuth();
+                default:
+                    throw getErrorReporter().errorInProtocol(httpResponse.getStatusLine().toString());
+            }
+        } catch (IOException e) {
+            throw getErrorReporter().errorInConnection(e);
+        }
+    }
+
     private HttpClientContext createHttpClientContext(URI uri) {
         HttpClientContext hcCtx = HttpClientContext.create();
         AuthCache ac = new BasicAuthCache();
@@ -540,6 +594,18 @@ public class ADBProtocol {
         om.configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL, true);
         om.enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS);
         return om;
+    }
+
+    protected String getQueryServiceEndpointPath() {
+        return QUERY_SERVICE_ENDPOINT_PATH;
+    }
+
+    protected String getQueryResultEndpointPath() {
+        return QUERY_RESULT_ENDPOINT_PATH;
+    }
+
+    protected String getActiveRequestsEndpointPath() {
+        return ACTIVE_REQUESTS_ENDPOINT_PATH;
     }
 
     private static void closeQuietly(Exception mainExc, java.io.Closeable... closeableList) {

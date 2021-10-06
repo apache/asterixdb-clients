@@ -31,7 +31,7 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
-final class ADBDriverContext {
+public class ADBDriverContext {
 
     final Class<? extends ADBDriverBase> driverClass;
 

@@ -19,10 +19,11 @@
 
 package org.apache.asterix.jdbc.core;
 
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
-interface ADBDriverProperty {
+public interface ADBDriverProperty {
 
     String getPropertyName();
 
@@ -36,7 +37,10 @@ interface ADBDriverProperty {
         PASSWORD("password", Function.identity(), null),
         CONNECT_TIMEOUT("connectTimeout", Integer::parseInt, null),
         SOCKET_TIMEOUT("socketTimeout", Integer::parseInt, null),
-        MAX_WARNINGS("maxWarnings", Integer::parseInt, 10);
+        MAX_WARNINGS("maxWarnings", Integer::parseInt, 10),
+        CATALOG_DATAVERSE_MODE("catalogDataverseMode", Integer::parseInt, 1), // 1 -> CATALOG, 2 -> CATALOG_SCHEMA
+        CATALOG_INCLUDES_SCHEMALESS("catalogIncludesSchemaless", Boolean::parseBoolean, false),
+        SQL_COMPAT_MODE("sqlCompatMode", Boolean::parseBoolean, true); // Whether user statements are executed in 'SQL-compat' mode
 
         private final String propertyName;
 
@@ -66,6 +70,26 @@ interface ADBDriverProperty {
         @Override
         public String toString() {
             return getPropertyName();
+        }
+
+        public Object fetchPropertyValue(Map<ADBDriverProperty, Object> properties) {
+            return properties.getOrDefault(this, defaultValue);
+        }
+    }
+
+    enum CatalogDataverseMode {
+        CATALOG,
+        CATALOG_SCHEMA;
+
+        static CatalogDataverseMode valueOf(int n) {
+            switch (n) {
+                case 1:
+                    return CATALOG;
+                case 2:
+                    return CATALOG_SCHEMA;
+                default:
+                    throw new IllegalArgumentException(String.valueOf(n));
+            }
         }
     }
 }

@@ -35,8 +35,10 @@ import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Period;
+import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -45,6 +47,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -76,11 +79,15 @@ final class ADBRowStore {
 
     static final List<Class<?>> GET_OBJECT_NON_ATOMIC = Arrays.asList(Collection.class, List.class, Map.class);
 
+    private static final ZoneId TZ_UTC = ZoneId.of("UTC");
+
     private final ADBResultSet resultSet;
 
     private final ADBDatatype[] columnTypes;
     private final Object[] objectStore;
     private final long[] registerStore; // 2 registers per column
+
+    private final TimeZone tzSystem = TimeZone.getDefault();
 
     private int parsedLength;
     private long currentDateChronon;
@@ -591,16 +598,15 @@ final class ADBRowStore {
     }
 
     Date getDate(int columnIndex, Calendar cal) throws SQLException {
-        // TODO:cal is not used
         ADBDatatype valueType = getColumnType(columnIndex);
         switch (valueType) {
             case MISSING:
             case NULL:
                 return null;
             case DATE:
-                return toDateFromDateChronon(getColumnRegister(columnIndex, 0));
+                return toDateFromDateChronon(getColumnRegister(columnIndex, 0), getTimeZone(cal, tzSystem));
             case DATETIME:
-                return toDateFromDatetimeChronon(getColumnRegister(columnIndex, 0));
+                return toDateFromDatetimeChronon(getColumnRegister(columnIndex, 0), getTimeZone(cal, tzSystem));
             case STRING:
                 try {
                     LocalDate d = LocalDate.parse(getStringFromObjectStore(columnIndex)); // TODO:review
@@ -639,20 +645,20 @@ final class ADBRowStore {
     }
 
     Time getTime(int columnIndex, Calendar cal) throws SQLException {
-        // TODO:cal not used
         ADBDatatype valueType = getColumnType(columnIndex);
         switch (valueType) {
             case MISSING:
             case NULL:
                 return null;
             case TIME:
-                return toTimeFromTimeChronon(getColumnRegister(columnIndex, 0));
+                return toTimeFromTimeChronon(getColumnRegister(columnIndex, 0), getTimeZone(cal, tzSystem));
             case DATETIME:
-                return toTimeFromDatetimeChronon(getColumnRegister(columnIndex, 0));
+                return toTimeFromDatetimeChronon(getColumnRegister(columnIndex, 0), getTimeZone(cal, tzSystem));
             case STRING:
                 try {
                     LocalTime t = LocalTime.parse(getStringFromObjectStore(columnIndex)); // TODO:review
-                    return toTimeFromTimeChronon(TimeUnit.NANOSECONDS.toMillis(t.toNanoOfDay()));
+                    return toTimeFromTimeChronon(TimeUnit.NANOSECONDS.toMillis(t.toNanoOfDay()),
+                            getTimeZone(cal, tzSystem));
                 } catch (DateTimeParseException e) {
                     throw getErrorReporter().errorInvalidValueOfType(valueType);
                 }
@@ -687,16 +693,15 @@ final class ADBRowStore {
     }
 
     Timestamp getTimestamp(int columnIndex, Calendar cal) throws SQLException {
-        //TODO:FIXME:CAL NOT USED
         ADBDatatype valueType = getColumnType(columnIndex);
         switch (valueType) {
             case MISSING:
             case NULL:
                 return null;
             case DATE:
-                return toTimestampFromDateChronon(getColumnRegister(columnIndex, 0));
+                return toTimestampFromDateChronon(getColumnRegister(columnIndex, 0), getTimeZone(cal, tzSystem));
             case DATETIME:
-                return toTimestampFromDatetimeChronon(getColumnRegister(columnIndex, 0));
+                return toTimestampFromDatetimeChronon(getColumnRegister(columnIndex, 0), getTimeZone(cal, tzSystem));
             case STRING:
                 try {
                     Instant i = Instant.parse(getStringFromObjectStore(columnIndex));
@@ -711,19 +716,19 @@ final class ADBRowStore {
         }
     }
 
-    Instant getInstant(int columnIndex) throws SQLException {
+    LocalDateTime getLocalDateTime(int columnIndex) throws SQLException {
         ADBDatatype valueType = getColumnType(columnIndex);
         switch (valueType) {
             case MISSING:
             case NULL:
                 return null;
             case DATE:
-                return toInstantFromDateChronon(getColumnRegister(columnIndex, 0));
+                return toLocalDateTimeFromDateChronon(getColumnRegister(columnIndex, 0));
             case DATETIME:
-                return toInstantFromDatetimeChronon(getColumnRegister(columnIndex, 0));
+                return toLocalDateTimeFromDatetimeChronon(getColumnRegister(columnIndex, 0));
             case STRING:
                 try {
-                    return Instant.parse(getStringFromObjectStore(columnIndex)); // TODO:review
+                    return LocalDateTime.parse(getStringFromObjectStore(columnIndex)); // TODO:review
                 } catch (DateTimeParseException e) {
                     throw getErrorReporter().errorInvalidValueOfType(valueType);
                 }
@@ -822,7 +827,7 @@ final class ADBRowStore {
             case TIME:
                 return toLocalTimeFromTimeChronon(getColumnRegister(columnIndex, 0)).toString(); // TODO:review
             case DATETIME:
-                return toInstantFromDatetimeChronon(getColumnRegister(columnIndex, 0)).toString(); // TODO:review
+                return toLocalDateTimeFromDatetimeChronon(getColumnRegister(columnIndex, 0)).toString(); // TODO:review
             case YEARMONTHDURATION:
                 return getPeriodFromObjectStore(columnIndex).toString(); // TODO:review
             case DAYTIMEDURATION:
@@ -883,11 +888,11 @@ final class ADBRowStore {
             case DOUBLE:
                 return getNumberFromObjectStore(columnIndex);
             case DATE:
-                return toDateFromDateChronon(getColumnRegister(columnIndex, 0));
+                return toDateFromDateChronon(getColumnRegister(columnIndex, 0), tzSystem);
             case TIME:
-                return toTimeFromTimeChronon(getColumnRegister(columnIndex, 0));
+                return toTimeFromTimeChronon(getColumnRegister(columnIndex, 0), tzSystem);
             case DATETIME:
-                return toTimestampFromDatetimeChronon(getColumnRegister(columnIndex, 0));
+                return toTimestampFromDatetimeChronon(getColumnRegister(columnIndex, 0), tzSystem);
             case YEARMONTHDURATION:
                 return getPeriodFromObjectStore(columnIndex);
             case DAYTIMEDURATION:
@@ -952,7 +957,7 @@ final class ADBRowStore {
         map.put(Time.class, ADBRowStore::getTime);
         map.put(LocalTime.class, ADBRowStore::getLocalTime);
         map.put(Timestamp.class, ADBRowStore::getTimestamp);
-        map.put(Instant.class, ADBRowStore::getInstant);
+        map.put(LocalDateTime.class, ADBRowStore::getLocalDateTime);
         map.put(Period.class, ADBRowStore::getPeriod);
         map.put(Duration.class, ADBRowStore::getDuration);
         map.put(UUID.class, ADBRowStore::getUUID);
@@ -960,12 +965,12 @@ final class ADBRowStore {
         return map;
     }
 
-    private Date toDateFromDateChronon(long dateChrononInDays) {
-        return new Date(TimeUnit.DAYS.toMillis(dateChrononInDays));
+    private Date toDateFromDateChronon(long dateChrononInDays, TimeZone tz) {
+        return new Date(getDatetimeChrononAdjusted(TimeUnit.DAYS.toMillis(dateChrononInDays), tz));
     }
 
-    private Date toDateFromDatetimeChronon(long datetimeChrononInMillis) {
-        return new Date(datetimeChrononInMillis);
+    private Date toDateFromDatetimeChronon(long datetimeChrononInMillis, TimeZone tz) {
+        return new Date(getDatetimeChrononAdjusted(datetimeChrononInMillis, tz));
     }
 
     private LocalDate toLocalDateFromDateChronon(long dateChrononInDays) {
@@ -976,13 +981,13 @@ final class ADBRowStore {
         return LocalDate.ofEpochDay(TimeUnit.MILLISECONDS.toDays(datetimeChrononInMillis));
     }
 
-    private Time toTimeFromTimeChronon(long timeChrononInMillis) {
+    private Time toTimeFromTimeChronon(long timeChrononInMillis, TimeZone tz) {
         long datetimeChrononInMillis = getCurrentDateChrononInMillis() + timeChrononInMillis;
-        return new Time(datetimeChrononInMillis);
+        return new Time(getDatetimeChrononAdjusted(datetimeChrononInMillis, tz));
     }
 
-    private Time toTimeFromDatetimeChronon(long datetimeChrononInMillis) {
-        return new Time(datetimeChrononInMillis);
+    private Time toTimeFromDatetimeChronon(long datetimeChrononInMillis, TimeZone tz) {
+        return new Time(getDatetimeChrononAdjusted(datetimeChrononInMillis, tz));
     }
 
     private LocalTime toLocalTimeFromTimeChronon(long timeChrononInMillis) {
@@ -993,28 +998,36 @@ final class ADBRowStore {
         return LocalTime.ofNanoOfDay(TimeUnit.MILLISECONDS.toNanos(datetimeChrononInMillis));
     }
 
-    private Timestamp toTimestampFromDatetimeChronon(long datetimeChrononInMillis) {
-        return new Timestamp(datetimeChrononInMillis);
+    private Timestamp toTimestampFromDatetimeChronon(long datetimeChrononInMillis, TimeZone tz) {
+        return new Timestamp(getDatetimeChrononAdjusted(datetimeChrononInMillis, tz));
     }
 
-    private Timestamp toTimestampFromDateChronon(long dateChrononInDays) {
-        return new Timestamp(TimeUnit.DAYS.toMillis(dateChrononInDays));
+    private Timestamp toTimestampFromDateChronon(long dateChrononInDays, TimeZone tz) {
+        return new Timestamp(getDatetimeChrononAdjusted(TimeUnit.DAYS.toMillis(dateChrononInDays), tz));
     }
 
-    private Instant toInstantFromDatetimeChronon(long datetimeChrononInMillis) {
-        return Instant.ofEpochMilli(datetimeChrononInMillis);
+    private LocalDateTime toLocalDateTimeFromDatetimeChronon(long datetimeChrononInMillis) {
+        return LocalDateTime.ofInstant(Instant.ofEpochMilli(datetimeChrononInMillis), TZ_UTC);
     }
 
-    private Instant toInstantFromDateChronon(long dateChrononInDays) {
-        return Instant.ofEpochMilli(TimeUnit.DAYS.toMillis(dateChrononInDays));
+    private LocalDateTime toLocalDateTimeFromDateChronon(long dateChrononInDays) {
+        return LocalDate.ofEpochDay(dateChrononInDays).atStartOfDay();
+    }
+
+    private long getDatetimeChrononAdjusted(long datetimeChrononInMillis, TimeZone tz) {
+        int tzOffset = tz.getOffset(datetimeChrononInMillis);
+        return datetimeChrononInMillis - tzOffset;
     }
 
     private long getCurrentDateChrononInMillis() {
         if (currentDateChronon == 0) {
-            long chrononOfDay = TimeUnit.DAYS.toMillis(1);
-            currentDateChronon = System.currentTimeMillis() / chrononOfDay * chrononOfDay;
+            currentDateChronon = TimeUnit.DAYS.toMillis(TimeUnit.MILLISECONDS.toDays(System.currentTimeMillis()));
         }
         return currentDateChronon;
+    }
+
+    private TimeZone getTimeZone(Calendar cal, TimeZone tzDefault) {
+        return cal != null ? cal.getTimeZone() : tzDefault;
     }
 
     private String printAsJson(Object value) throws SQLException {

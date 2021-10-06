@@ -20,6 +20,7 @@
 package org.apache.asterix.jdbc.core;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
@@ -110,7 +111,7 @@ final class ADBErrorReporter {
 
     protected SQLInvalidAuthorizationSpecException errorAuth() {
         return new SQLInvalidAuthorizationSpecException("Authentication/authorization error",
-                SQLState.CONNECTION_REJECTED.code);
+                SQLState.INVALID_AUTH_SPEC.code);
     }
 
     protected SQLException errorColumnNotFound(String columnNameOrNumber) {
@@ -163,6 +164,10 @@ final class ADBErrorReporter {
         return new SQLException(String.format("Cannot create request. %s", getMessage(e)), e);
     }
 
+    protected SQLException errorInRequestURIGeneration(URISyntaxException e) {
+        return new SQLException(String.format("Cannot create request URI. %s", getMessage(e)), e);
+    }
+
     protected SQLException errorInResultHandling(IOException e) {
         return new SQLException(String.format("Cannot reading result. %s", getMessage(e)), e);
     }
@@ -193,8 +198,8 @@ final class ADBErrorReporter {
     }
 
     public enum SQLState {
-        CONNECTION_REJECTED("08004"),
-        CONNECTION_FAILURE("08006"),
+        CONNECTION_FAILURE("08001"), // TODO:08006??
+        INVALID_AUTH_SPEC("28000"),
         INVALID_DATE_TYPE("HY004"),
         INVALID_CURSOR_POSITION("HY108");
 

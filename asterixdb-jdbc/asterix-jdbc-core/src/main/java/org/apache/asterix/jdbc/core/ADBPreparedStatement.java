@@ -49,11 +49,12 @@ final class ADBPreparedStatement extends ADBStatement implements PreparedStateme
 
     final List<ADBColumn> resultColumns;
 
-    ADBPreparedStatement(ADBConnection connection, String sql, String catalog, String schema) throws SQLException {
-        super(connection, catalog, schema);
-        // TODO:timeout
-        ADBProtocol.QueryServiceResponse response =
-                connection.protocol.submitStatement(sql, null, false, true, 0, catalog, schema);
+    ADBPreparedStatement(ADBConnection connection, String sql) throws SQLException {
+        super(connection);
+        ADBProtocol.SubmitStatementOptions stmtOptions = createSubmitStatementOptions();
+        stmtOptions.compileOnly = true;
+        stmtOptions.timeoutSeconds = 0; /* TODO:timeout */
+        ADBProtocol.QueryServiceResponse response = connection.protocol.submitStatement(sql, null, null, stmtOptions);
         int parameterCount = connection.protocol.getStatementParameterCount(response);
         boolean isQuery = connection.protocol.isStatementCategory(response,
                 ADBProtocol.QueryServiceResponse.StatementCategory.QUERY);
@@ -294,7 +295,7 @@ final class ADBPreparedStatement extends ADBStatement implements PreparedStateme
     @Override
     public void setDate(int parameterIndex, java.sql.Date v, Calendar cal) throws SQLException {
         checkClosed();
-        setDate(parameterIndex, v);
+        setArg(parameterIndex, cal != null ? new SqlCalendarDate(v, cal.getTimeZone()) : v);
     }
 
     @Override
@@ -306,7 +307,7 @@ final class ADBPreparedStatement extends ADBStatement implements PreparedStateme
     @Override
     public void setTime(int parameterIndex, java.sql.Time v, Calendar cal) throws SQLException {
         checkClosed();
-        setTime(parameterIndex, v);
+        setArg(parameterIndex, cal != null ? new SqlCalendarTime(v, cal.getTimeZone()) : v);
     }
 
     @Override
@@ -318,7 +319,7 @@ final class ADBPreparedStatement extends ADBStatement implements PreparedStateme
     @Override
     public void setTimestamp(int parameterIndex, java.sql.Timestamp v, Calendar cal) throws SQLException {
         checkClosed();
-        setTimestamp(parameterIndex, v);
+        setArg(parameterIndex, cal != null ? new SqlCalendarTimestamp(v, cal.getTimeZone()) : v);
     }
 
     // Generic (setObject)

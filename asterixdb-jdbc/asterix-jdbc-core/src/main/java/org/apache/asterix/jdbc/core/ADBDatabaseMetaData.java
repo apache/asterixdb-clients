@@ -122,7 +122,7 @@ final class ADBDatabaseMetaData extends ADBWrapperSupport implements DatabaseMet
 
     @Override
     public ADBResultSet getSchemas() throws SQLException {
-        return getSchemas(metaStatement.connection.catalog, null);
+        return metaStatement.executeGetSchemasQuery();
     }
 
     @Override
@@ -133,6 +133,15 @@ final class ADBDatabaseMetaData extends ADBWrapperSupport implements DatabaseMet
     @Override
     public int getMaxSchemaNameLength() {
         return METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8;
+    }
+
+    //TODO:document
+    private boolean supportsCatalogsInStatements() {
+        return false;
+    }
+
+    private boolean supportsSchemasInStatements() {
+        return false;
     }
 
     // Tables
@@ -214,18 +223,19 @@ final class ADBDatabaseMetaData extends ADBWrapperSupport implements DatabaseMet
 
     @Override
     public ADBResultSet getImportedKeys(String catalog, String schema, String table) throws SQLException {
-        return metaStatement.executeEmptyResultQuery();
+        return metaStatement.executeGetImportedKeysQuery(catalog, schema, table);
     }
 
     @Override
     public ADBResultSet getExportedKeys(String catalog, String schema, String table) throws SQLException {
-        return metaStatement.executeEmptyResultQuery();
+        return metaStatement.executeGetExportedKeysQuery(catalog, schema, table);
     }
 
     @Override
     public ADBResultSet getCrossReference(String parentCatalog, String parentSchema, String parentTable,
             String foreignCatalog, String foreignSchema, String foreignTable) throws SQLException {
-        return metaStatement.executeEmptyResultQuery();
+        return metaStatement.executeCrossReferenceQuery(parentCatalog, parentSchema, parentTable, foreignCatalog,
+                foreignSchema, foreignTable);
     }
 
     // Indexes
@@ -696,12 +706,12 @@ final class ADBDatabaseMetaData extends ADBWrapperSupport implements DatabaseMet
 
     @Override
     public boolean supportsCatalogsInDataManipulation() {
-        return true;
+        return supportsCatalogsInStatements();
     }
 
     @Override
     public boolean supportsSchemasInDataManipulation() {
-        return true;
+        return supportsSchemasInStatements();
     }
 
     @Override
@@ -725,12 +735,12 @@ final class ADBDatabaseMetaData extends ADBWrapperSupport implements DatabaseMet
 
     @Override
     public boolean supportsCatalogsInTableDefinitions() {
-        return true;
+        return supportsCatalogsInStatements();
     }
 
     @Override
     public boolean supportsSchemasInTableDefinitions() {
-        return true;
+        return supportsSchemasInStatements();
     }
 
     @Override
@@ -752,24 +762,24 @@ final class ADBDatabaseMetaData extends ADBWrapperSupport implements DatabaseMet
 
     @Override
     public boolean supportsCatalogsInIndexDefinitions() {
-        return true;
+        return supportsCatalogsInStatements();
     }
 
     @Override
     public boolean supportsSchemasInIndexDefinitions() {
-        return true;
+        return supportsSchemasInStatements();
     }
 
     // DDL: GRANT / REVOKE (not supported)
 
     @Override
     public boolean supportsCatalogsInPrivilegeDefinitions() {
-        return false;
+        return supportsCatalogsInStatements();
     }
 
     @Override
     public boolean supportsSchemasInPrivilegeDefinitions() {
-        return false;
+        return supportsSchemasInStatements();
     }
 
     @Override
@@ -786,12 +796,12 @@ final class ADBDatabaseMetaData extends ADBWrapperSupport implements DatabaseMet
 
     @Override
     public boolean supportsCatalogsInProcedureCalls() {
-        return false;
+        return supportsCatalogsInStatements();
     }
 
     @Override
     public boolean supportsSchemasInProcedureCalls() {
-        return false;
+        return supportsSchemasInStatements();
     }
 
     // Transactions
