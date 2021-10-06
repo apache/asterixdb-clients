@@ -21,7 +21,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <artifactId>apache-asterixdb</artifactId>
+    <artifactId>apache-asterixdb-jdbc</artifactId>
     <groupId>org.apache.asterix</groupId>
     <version>0.9.7-SNAPSHOT</version>
   </parent>
@@ -38,8 +38,6 @@
 
   <properties>
     <root.dir>${basedir}/..</root.dir>
-    <source.jdk.version>1.8</source.jdk.version>
-    <target.jdk.version>1.8</target.jdk.version>
   </properties>
 
   <dependencies>

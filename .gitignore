@@ -1,0 +1,16 @@
+target
+.classpath
+.settings
+.project
+*.pyc
+*.iml
+.idea
+*.ipr
+*.iws
+output
+tmp
+dist
+*~
+.DS_Store
+*.swp
+.m2*
