@@ -1036,7 +1036,7 @@ final class ADBRowStore {
             try {
                 //TODO:FIXME:need to configure generator to print java.sql.Date/Times properly
                 jsonGen = resultSet.metadata.statement.connection.protocol.driverContext.genericObjectWriter
-                        .createGenerator(jsonGenBuffer);
+                        .getFactory().createGenerator(jsonGenBuffer);
             } catch (IOException e) {
                 throw getErrorReporter().errorInResultHandling(e);
             }

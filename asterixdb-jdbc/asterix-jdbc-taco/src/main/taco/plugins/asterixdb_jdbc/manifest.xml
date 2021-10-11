@@ -1,0 +1,95 @@
+<!--
+ ! Licensed to the Apache Software Foundation (ASF) under one
+ ! or more contributor license agreements.  See the NOTICE file
+ ! distributed with this work for additional information
+ ! regarding copyright ownership.  The ASF licenses this file
+ ! to you under the Apache License, Version 2.0 (the
+ ! "License"); you may not use this file except in compliance
+ ! with the License.  You may obtain a copy of the License at
+ !
+ !   http://www.apache.org/licenses/LICENSE-2.0
+ !
+ ! Unless required by applicable law or agreed to in writing,
+ ! software distributed under the License is distributed on an
+ ! "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ ! KIND, either express or implied.  See the License for the
+ ! specific language governing permissions and limitations
+ ! under the License.
+ !-->
+<connector-plugin class='${taco.plugin.class}' superclass='jdbc' plugin-version='${taco.plugin.version}'
+                  name='${taco.plugin.name}' version='18.1' min-version-tableau='2020.4'>
+  <vendor-information>
+      <company name="${taco.plugin.vendor}"/>
+      <support-link url="${taco.plugin.site}"/>
+      <driver-download-link url="${taco.plugin.site}"/>
+  </vendor-information>
+  <connection-customization class="${taco.plugin.class}" enabled="true" version="10.0">
+    <vendor name="vendor"/>
+    <driver name="driver"/>
+    <customizations>
+      <!-- See https://tableau.github.io/connector-plugin-sdk/docs/capabilities -->
+      <!-- Metadata -->
+      <customization name="CAP_QUERY_WHERE_FALSE_METADATA" value="no"/>
+
+      <!-- Temporary Tables -->
+      <customization name="CAP_CREATE_TEMP_TABLES" value="no"/>
+      <!--customization name="CAP_INDEX_TEMP_TABLES" value="no" /-->
+      <customization name="CAP_SELECT_INTO" value="no"/>
+      <customization name="CAP_SELECT_TOP_INTO" value="no"/>
+      <!--customization name="CAP_TEMP_TABLES_NOT_SESSION_SCOPED" value="yes" /-->
+      <!--customization name="CAP_SUPPRESS_TEMP_TABLE_CHECKS" value="yes" /-->
+
+      <!-- String Splits -->
+      <customization name="CAP_SUPPORTS_SPLIT_FROM_LEFT" value="yes"/>
+      <customization name="CAP_SUPPORTS_SPLIT_FROM_RIGHT" value="yes"/>
+
+      <!-- Initial SQL -->
+      <customization name="CAP_SUPPORTS_INITIAL_SQL" value="no"/>
+
+      <!-- Query -->
+      <customization name="CAP_QUERY_BOOL_IDENTIFIER_TO_LOGICAL" value="no"/>
+      <customization name="CAP_QUERY_BOOLEXPR_TO_INTEXPR" value="no"/>
+      <customization name="CAP_QUERY_FROM_REQUIRES_ALIAS" value="yes"/>
+      <customization name="CAP_QUERY_GROUP_BY_BOOL" value="yes"/>
+      <customization name="CAP_QUERY_HAVING_REQUIRES_GROUP_BY" value="yes"/>
+      <customization name="CAP_QUERY_HAVING_UNSUPPORTED" value="no"/>
+      <customization name="CAP_QUERY_INCLUDE_GROUP_BY_COLUMNS_IN_SELECT" value="no"/>
+      <customization name="CAP_QUERY_INCLUDE_HAVING_COLUMNS_IN_SELECT" value="no"/>
+      <customization name="CAP_QUERY_INITIAL_SQL_SPLIT_STATEMENTS" value="yes"/>
+      <customization name="CAP_QUERY_JOIN_ACROSS_SCHEMAS" value="no"/>
+      <customization name="CAP_QUERY_JOIN_PUSH_DOWN_CONDITION_EXPRESSIONS" value="no"/>
+      <customization name="CAP_QUERY_JOIN_REQUIRES_SCOPE" value="no"/>
+      <customization name="CAP_QUERY_JOIN_REQUIRES_SUBQUERY" value="no"/>
+      <customization name="CAP_QUERY_OUTER_JOIN_CONDITION_NO_TRIVIAL" value="no"/>
+      <customization name="CAP_QUERY_SCALAR_SELECTS_ALL_IN_GROUP_BYS" value="yes"/>
+      <customization name="CAP_QUERY_SELECT_ALIASES_SORTED" value="yes"/>
+      <customization name="CAP_QUERY_SORT_BY" value="yes"/>
+      <customization name="CAP_QUERY_SORT_BY_DEGREE" value="no"/>
+      <customization name="CAP_QUERY_SUBQUERIES" value="yes"/>
+      <customization name="CAP_QUERY_TOP_N" value="yes"/>
+      <customization name="CAP_QUERY_SUPPORT_EMPTY_GROUPBY" value="no"/>
+      <customization name="CAP_QUERY_SUPPORTS_UNIQUE_IDENTIFIER" value="no"/>
+      <customization name="CAP_QUERY_TIME_REQUIRES_CAST" value="no"/>
+      <customization name="CAP_QUERY_TOP_N" value="yes"/>
+
+      <!-- JDBC -->
+      <customization name="CAP_JDBC_EXPORT_DATA_BATCH" value="no"/>
+      <customization name="CAP_JDBC_METADATA_GET_INDEX_INFO" value="no"/>
+      <customization name="CAP_JDBC_METADATA_READ_FOREIGNKEYS" value="yes"/>
+      <customization name="CAP_JDBC_METADATA_USE_RESULTSET_FOR_TABLE" value="no"/>
+      <customization name="CAP_JDBC_QUERY_ASYNC" value="yes"/>
+      <customization name="CAP_JDBC_QUERY_CANCEL" value="yes"/>
+      <customization name="CAP_JDBC_SUPPRESS_ENUMERATE_SCHEMAS" value="yes" />
+      <customization name="CAP_JDBC_USE_ADAPTIVE_FETCH_SIZE" value="no"/>
+
+      <!-- Uncommon -->
+      <customization name="CAP_SUPPRESS_GET_SERVER_TIME" value="no"/>
+      <customization name="CAP_SUPPORTS_UNION" value="no"/>
+    </customizations>
+  </connection-customization>
+  <!--connection-dialog file='connection-dialog.tcd'/-->
+  <connection-fields   file='connection-fields.xml'/>
+  <connection-metadata file='connection-metadata.xml'/>
+  <connection-resolver file="connectionResolver.tdr"/>
+  <dialect file='dialect.tdd'/>
+</connector-plugin>

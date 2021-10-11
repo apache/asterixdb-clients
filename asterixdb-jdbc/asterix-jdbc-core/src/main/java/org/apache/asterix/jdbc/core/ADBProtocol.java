@@ -255,7 +255,8 @@ public class ADBProtocol {
 
         ByteArrayOutputStreamImpl baos = new ByteArrayOutputStreamImpl(512);
         try {
-            JsonGenerator jsonGen = driverContext.genericObjectWriter.createGenerator(baos, JsonEncoding.UTF8);
+            JsonGenerator jsonGen =
+                    driverContext.genericObjectWriter.getFactory().createGenerator(baos, JsonEncoding.UTF8);
             jsonGen.writeStartObject();
             jsonGen.writeStringField(CLIENT_TYPE, CLIENT_TYPE_JDBC);
             jsonGen.writeStringField(MODE, MODE_DEFERRED);
@@ -340,7 +341,7 @@ public class ADBProtocol {
         }
         QueryServiceResponse response;
         try (InputStream contentStream = httpResponse.getEntity().getContent()) {
-            response = driverContext.genericObjectReader.readValue(contentStream, QueryServiceResponse.class);
+            response = driverContext.genericObjectReader.forType(QueryServiceResponse.class).readValue(contentStream);
         }
         QueryServiceResponse.Status status = response.status;
         if (httpStatus == HttpStatus.SC_OK && status == QueryServiceResponse.Status.SUCCESS) {
@@ -386,7 +387,7 @@ public class ADBProtocol {
             }
             HttpEntity entity = httpResponse.getEntity();
             httpContentStream = entity.getContent();
-            parser = driverContext.genericObjectReader
+            parser = driverContext.genericObjectReader.getFactory()
                     .createParser(new InputStreamWithAttachedResource(httpContentStream, httpResponse));
             if (!advanceToArrayField(parser, RESULTS)) {
                 throw getErrorReporter().errorInProtocol();

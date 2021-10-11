@@ -1,0 +1,1652 @@
+<!--
+ ! Licensed to the Apache Software Foundation (ASF) under one
+ ! or more contributor license agreements.  See the NOTICE file
+ ! distributed with this work for additional information
+ ! regarding copyright ownership.  The ASF licenses this file
+ ! to you under the Apache License,Version 2.0 (the
+ ! "License"); you may not use this file except in compliance
+ ! with the License.  You may obtain a copy of the License at
+ !
+ !   http://www.apache.org/licenses/LICENSE-2.0
+ !
+ ! Unless required by applicable law or agreed to in writing,
+ ! software distributed under the License is distributed on an
+ ! "AS IS" BASIS,WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ ! KIND,either express or implied.  See the License for the
+ ! specific language governing permissions and limitations
+ ! under the License.
+ !-->
+<dialect name='${taco.plugin.dialect}' class='${taco.plugin.class}' version='18.1'>
+  <function-map>
+    <!-- ********************** -->
+    <!-- * Numeric functions  * -->
+    <!-- ********************** -->
+    <function group='numeric' name='ABS' return-type='real'>
+      <formula>ABS(%1)</formula>
+      <argument type='real' />
+    </function>
+    <function group='numeric' name='ABS' return-type='int'>
+      <formula>ABS(%1)</formula>
+      <argument type='int' />
+    </function>
+    <function group='numeric' name='ACOS' return-type='real'>
+      <formula>ACOS(%1)</formula>
+      <argument type='real' />
+    </function>
+    <function group='numeric' name='ASIN' return-type='real'>
+      <formula>ASIN(%1)</formula>
+      <argument type='real' />
+    </function>
+    <function group='numeric' name='ATAN' return-type='real'>
+      <formula>ATAN(%1)</formula>
+      <argument type='real' />
+    </function>
+    <function group='numeric' name='ATAN2' return-type='real'>
+      <formula>ATAN2(%1,%2)</formula>
+      <argument type='real' />
+      <argument type='real' />
+    </function>
+    <function group='numeric' name='CEILING' return-type='real'>
+      <formula>CEILING(%1)</formula>
+      <argument type='real' />
+    </function>
+    <function group='numeric' name='CEILING' return-type='int'>
+      <formula>BIGINT(CEILING(%1))</formula>
+      <argument type='real' />
+    </function>
+    <function group='numeric' name='CEILING' return-type='int'>
+      <formula>CEILING(%1)</formula>
+      <argument type='int' />
+    </function>
+    <function group='numeric' name='COS' return-type='real'>
+      <formula>COS(%1)</formula>
+      <argument type='real' />
+    </function>
+    <function group='numeric' name='COT' return-type='real'>
+      <formula><![CDATA[(CASE WHEN %1!=0 THEN COS(%1)/SIN(%1) ELSE NULL END)]]></formula>
+      <argument type='real' />
+    </function>
+    <function group='numeric' name='DEGREES' return-type='real'>
+      <formula>DEGREES(%1)</formula>
+      <argument type='real' />
+    </function>
+    <function group='numeric' name='DIV' return-type='int'>
+      <formula><![CDATA[(%1 DIV %2)]]></formula>
+      <argument type='int' />
+      <argument type='int' />
+    </function>
+    <function group='numeric' name='EXP' return-type='real'>
+      <formula>EXP(%1)</formula>
+      <argument type='real' />
+    </function>
+    <function group='numeric' name='FLOOR' return-type='real'>
+      <formula>FLOOR(%1)</formula>
+      <argument type='real' />
+    </function>
+    <function group='numeric' name='FLOOR' return-type='int'>
+      <formula>BIGINT(FLOOR(%1))</formula>
+      <argument type='real' />
+    </function>
+    <function group='numeric' name='FLOOR' return-type='int'>
+      <formula>FLOOR(%1)</formula>
+      <argument type='int' />
+    </function>
+    <function group='numeric' name='HEXBINX' return-type='real'>
+      <formula><![CDATA[(((CASE WHEN (ABS((%2)-(BIGINT(((%2)/SQRT(3.0)))*SQRT(3.0))))+SQRT(3.0)*((ABS((%1)-(BIGINT(((%1)/3.0))*3.0)))-1.0)>0.0 THEN 1.5 ELSE 0.0 END)-(CASE WHEN ((%1)-(BIGINT(((%1)/3.0))*3.0)<0.0) AND ((CASE WHEN (ABS((%2)-(BIGINT(((%2)/SQRT(3.0)))*SQRT(3.0))))+SQRT(3.0)*((ABS((%1)-(BIGINT(((%1)/3.0))*3.0)))-1.0)>0.0 THEN 1.5 ELSE 0.0 END)>0.0) THEN 3.0 ELSE 0.0 END))+(BIGINT(((%1)/3.0))*3.0))]]></formula>
+      <argument type='real' />
+      <argument type='real' />
+    </function>
+    <function group='numeric' name='HEXBINY' return-type='real'>
+      <formula><![CDATA[TRUNC(DOUBLE((((CASE WHEN (ABS((%2)-(BIGINT(((%2)/SQRT(3.0)))*SQRT(3.0))))+SQRT(3.0)*((ABS((%1)-(BIGINT(((%1)/3.0))*3.0)))-1.0)>0.0 THEN SQRT(3.0)/2.0 ELSE 0.0 END)-(CASE WHEN ((%2)-(BIGINT(((%2)/SQRT(3.0)))*SQRT(3.0))<0.0) AND ((CASE WHEN (ABS((%2)-(BIGINT(((%2)/SQRT(3.0)))*SQRT(3.0))))+SQRT(3.0)*((ABS((%1)-(BIGINT(((%1)/3.0))*3.0)))-1.0)>0.0 THEN SQRT(3.0)/2.0 ELSE 0.0 END)>0.0) THEN SQRT(3.0) ELSE 0.0 END))+(BIGINT(((%2)/SQRT(3.0)))*SQRT(3.0)))),3)]]></formula>
+      <argument type='real' />
+      <argument type='real' />
+    </function>
+    <function group='numeric' name='LN' return-type='real'>
+      <formula><![CDATA[(CASE WHEN %1>0 THEN LN(%1) ELSE NULL END)]]></formula>
+      <argument type='real' />
+    </function>
+    <function group='numeric' name='LOG' return-type='real'>
+      <formula><![CDATA[(CASE WHEN %1>0 THEN LOG(%1) ELSE NULL END)]]></formula>
+      <argument type='real' />
+    </function>
+    <function group='numeric' name='LOG' return-type='real'>
+      <formula><![CDATA[(CASE WHEN (%1>0) AND (%2>0) AND (%2!=1) THEN LOG(%1)/LOG(%2) ELSE NULL END)]]></formula>
+      <argument type='real' />
+      <argument type='real' />
+    </function>
+    <function group='numeric' name='LOG2' return-type='real'>
+      <formula><![CDATA[(CASE WHEN (%1>0) THEN LOG2(%1) ELSE NULL END)]]></formula>
+      <argument type='real' />
+    </function>
+    <function group='numeric' name='MAX' return-type='real'>
+      <formula>STRICT_MAX([%1,%2])</formula>
+      <argument type='real' />
+      <argument type='real' />
+    </function>
+    <function group='numeric' name='MAX' return-type='int'>
+      <formula>STRICT_MAX([%1,%2])</formula>
+      <argument type='int' />
+      <argument type='int' />
+    </function>
+    <function group='numeric' name='MIN' return-type='real'>
+      <formula>STRICT_MIN([%1,%2])</formula>
+      <argument type='real' />
+      <argument type='real' />
+    </function>
+    <function group='numeric' name='MIN' return-type='int'>
+      <formula>STRICT_MIN([%1,%2])</formula>
+      <argument type='int' />
+      <argument type='int' />
+    </function>
+    <function group='numeric' name='MOD' return-type='int'>
+      <formula>(%1 MOD %2)</formula>
+      <argument type='int' />
+      <argument type='int' />
+    </function>
+    <function group='numeric' name='PI' return-type='real'>
+      <formula>PI()</formula>
+    </function>
+    <function group='numeric' name='POWER' return-type='real'>
+      <formula><![CDATA[(CASE WHEN (%1<0) AND (FLOOR(%2)!=%2) THEN NULL ELSE POWER(%1,%2) END)]]></formula>
+      <argument type='real' />
+      <argument type='real' />
+    </function>
+    <function group='numeric' name='POWER' return-type='real'>
+      <formula>POWER(%1,%2)</formula>
+      <argument type='real' />
+      <argument type='int' />
+    </function>
+    <function group='numeric' name='POWER' return-type='real'>
+      <formula>POWER(DOUBLE(%1),%2)</formula>
+      <argument type='int' />
+      <argument type='int' />
+    </function>
+    <function group='numeric' name='RADIANS' return-type='real'>
+      <formula>RADIANS(%1)</formula>
+      <argument type='real' />
+    </function>
+    <function group='numeric' name='ROUND' return-type='real'>
+      <formula>ROUND(%1)</formula>
+      <argument type='real' />
+    </function>
+    <function group='numeric' name='ROUND' return-type='real'>
+      <formula>ROUND_HALF_UP(%1,TRUNC(%2,0))</formula>
+      <argument type='real' />
+      <argument type='real' />
+    </function>
+    <function group='numeric' name='ROUND' return-type='real'>
+      <formula>ROUND_HALF_UP(%1,%2)</formula>
+      <argument type='real' />
+      <argument type='int' />
+    </function>
+    <function group='numeric' name='SIGN' return-type='int'>
+      <formula>SIGN(%1)</formula>
+      <argument type='real' />
+    </function>
+    <function group='numeric' name='SIN' return-type='real'>
+      <formula>SIN(%1)</formula>
+      <argument type='real' />
+    </function>
+    <function group='numeric' name='SQRT' return-type='real'>
+      <formula><![CDATA[(CASE WHEN (%1<0) THEN NULL ELSE SQRT(%1) END)]]></formula>
+      <argument type='real' />
+    </function>
+    <function group='numeric' name='SQUARE' return-type='real'>
+      <formula>(%1^2)</formula>
+      <argument type='real' />
+    </function>
+    <function group='numeric' name='SQUARE' return-type='int'>
+      <formula>(%1^2)</formula>
+      <argument type='int' />
+    </function>
+    <function group='numeric' name='TAN' return-type='real'>
+      <formula>TAN(%1)</formula>
+      <argument type='real' />
+    </function>
+    <function group='numeric' name='TRUNC' return-type='real'>
+      <formula>TRUNC(%1,0)</formula>
+      <argument type='real' />
+    </function>
+    <function group='numeric;logical' name='ZN' return-type='real'>
+      <formula>COALESCE(%1,0)</formula>
+      <argument type='real' />
+    </function>
+    <function group='numeric;logical' name='ZN' return-type='int'>
+      <formula>COALESCE(%1,0)</formula>
+      <argument type='int' />
+    </function>
+    <!-- ********************* -->
+    <!-- * String functions  * -->
+    <!-- ********************* -->
+    <function group='string' name='ASCII' return-type='int'>
+      <formula>STRING_TO_CODEPOINT(%1)[0]</formula>
+      <argument type='str' />
+    </function>
+    <function group='string' name='CHAR' return-type='str'>
+      <formula><![CDATA[(CASE WHEN (%1>=0) AND (%1<256) THEN CODEPOINT_TO_STRING([TRUNC(%1,0)]) ELSE NULL END)]]></formula>
+      <argument type='real' />
+    </function>
+    <function group='string' name='CONTAINS' return-type='bool'>
+      <formula>CONTAINS(%1,%2)</formula>
+      <argument type='str' />
+      <argument type='str' />
+    </function>
+    <function group='string' name='ENDSWITH' return-type='bool'>
+      <formula>ENDS_WITH(%1,%2)</formula>
+      <argument type='str' />
+      <argument type='str' />
+    </function>
+    <!-- TODO:FILTER_CONTAINS,FILTER_ENDSWITH,FILTER_STARTSWITH -->
+    <function group='string' name='FIND' return-type='int'>
+      <formula><![CDATA[(POSITION(%1,%2)+1)]]></formula>
+      <argument type='str' />
+      <argument type='str' />
+    </function>
+    <function group='string' name='FIND' return-type='int'>
+      <formula><![CDATA[CASE WHEN (TRUNC(%3,0)<1) THEN (POSITION(%1,%2)+1) WHEN (POSITION(SUBSTRING1(%1,TRUNC(%3,0)),%2)>=0) THEN (POSITION(SUBSTRING1(%1,TRUNC(%3,0)),%2)+BIGINT(TRUNC(%3,0))) ELSE 0 END]]></formula>
+      <argument type='str' />
+      <argument type='str' />
+      <argument type='real' />
+    </function>
+    <function group='string' name='FINDNTH' return-type='int'>
+      <!--TODO:IMPLEMENT-->
+      <formula>TODO_FINDNTH(%1,%2,%3)</formula>
+      <argument type='str' />
+      <argument type='str' />
+      <argument type='real' />
+    </function>
+    <function group='string' name='LEFT' return-type='str'>
+      <formula><![CDATA[CASE WHEN (%2>=0) THEN SUBSTR1(%1,1,TRUNC(%2,0)) ELSE NULL END]]></formula>
+      <argument type='str' />
+      <argument type='real' />
+    </function>
+    <function group='string' name='LEFT' return-type='str'>
+      <formula><![CDATA[CASE WHEN (%2>=0) THEN SUBSTR1(%1,1,%2) ELSE NULL END]]></formula>
+      <argument type='str' />
+      <argument type='int' />
+    </function>
+    <function group='string' name='LEN' return-type='int'>
+      <formula>LENGTH(%1)</formula>
+      <argument type='str' />
+    </function>
+    <function group='string' name='LOWER' return-type='str'>
+      <formula>LOWER(%1)</formula>
+      <argument type='str' />
+    </function>
+    <function group='string' name='LTRIM' return-type='str'>
+      <formula>LTRIM(%1)</formula>
+      <argument type='str' />
+    </function>
+    <function group='string' name='LTRIM_THIS' return-type='str'>
+      <formula>LTRIM(%1,%2)</formula>
+      <argument type='str' />
+      <argument type='str' />
+    </function>
+    <function group='string' name='MAX' return-type='str'>
+      <formula>STRICT_MAX([%1,%2])</formula>
+      <argument type='str' />
+      <argument type='str' />
+    </function>
+    <function group='string' name='MID' return-type='str'>
+      <formula>SUBSTR1(%1,TRUNC(%2,0))</formula>
+      <argument type='str' />
+      <argument type='real' />
+    </function>
+    <function group='string' name='MID' return-type='str'>
+      <formula>SUBSTR1(%1,%2)</formula>
+      <argument type='str' />
+      <argument type='int' />
+    </function>
+    <function group='string' name='MID' return-type='str'>
+      <formula>SUBSTR1(%1,TRUNC(%2,0),TRUNC(%3,0))</formula>
+      <argument type='str' />
+      <argument type='real' />
+      <argument type='real' />
+    </function>
+    <function group='string' name='MID' return-type='str'>
+      <formula>SUBSTR1(%1,%2,%3)</formula>
+      <argument type='str' />
+      <argument type='int' />
+      <argument type='int' />
+    </function>
+    <function group='string' name='MIN' return-type='str'>
+      <formula>STRICT_MIN([%1,%2])</formula>
+      <argument type='str' />
+      <argument type='str' />
+    </function>
+    <function group='string' name='REGEXP_EXTRACT' return-type='str'>
+      <formula>REGEXP_MATCHES(%1,%2)[0]</formula>
+      <argument type='str' />
+      <argument type='str' />
+    </function>
+    <function group='string' name='REGEXP_EXTRACT_NTH' return-type='str'>
+      <formula>REGEXP_MATCHES(%1,%2)[%3-1]</formula>
+      <argument type='str' />
+      <argument type='str' />
+      <argument type='localint' />
+    </function>
+    <function group='string' name='REGEXP_MATCH' return-type='bool'>
+      <formula>REGEXP_LIKE(%1,%2)</formula>
+      <argument type='str' />
+      <argument type='str' />
+    </function>
+    <function group='string' name='REGEXP_REPLACE' return-type='str'>
+      <formula>REGEXP_REPLACE(%1,%2,%3)</formula>
+      <argument type='str' />
+      <argument type='str' />
+      <argument type='str' />
+    </function>
+    <function group='string' name='REPLACE' return-type='str'>
+      <formula>REPLACE(%1,%2,%3)</formula>
+      <argument type='str' />
+      <argument type='str' />
+      <argument type='str' />
+    </function>
+    <function group='string' name='RIGHT' return-type='str'>
+      <formula><![CDATA[(CASE WHEN %2>=0 THEN SUBSTR1(%1,-STRICT_MIN([TRUNC(%2,0),LENGTH(%1)])) ELSE NULL END)]]></formula>
+      <argument type='str' />
+      <argument type='real' />
+    </function>
+    <function group='string' name='RIGHT' return-type='str'>
+      <formula><![CDATA[(CASE WHEN %2>=0 THEN SUBSTR1(%1,-STRICT_MIN([%2,LENGTH(%1)])) ELSE NULL END)]]></formula>
+      <argument type='str' />
+      <argument type='int' />
+    </function>
+    <function group='string' name='RTRIM' return-type='str'>
+      <formula>RTRIM(%1)</formula>
+      <argument type='str' />
+    </function>
+    <function group='string' name='RTRIM_THIS' return-type='str'>
+      <formula>RTRIM(%1,%2)</formula>
+      <argument type='str' />
+      <argument type='str' />
+    </function>
+    <function group='string' name='SPACE' return-type='str'>
+      <formula><![CDATA[(CASE WHEN %1>=0 THEN REPEAT(' ',TRUNC(%1,0)) ELSE NULL END)]]></formula>
+      <argument type='real' />
+    </function>
+    <function group='string' name='SPACE' return-type='str'>
+      <formula><![CDATA[(CASE WHEN %1>=0 THEN REPEAT(' ',%1) ELSE NULL END)]]></formula>
+      <argument type='int' />
+    </function>
+    <function group='string' name='STARTSWITH' return-type='bool'>
+      <formula>STARTS_WITH(%1,%2)</formula>
+      <argument type='str' />
+      <argument type='str' />
+    </function>
+    <function group='string' name='TRIM' return-type='str'>
+      <formula>TRIM(%1)</formula>
+      <argument type='str' />
+    </function>
+    <function group='string' name='UPPER' return-type='str'>
+      <formula>UPPER(%1)</formula>
+      <argument type='str' />
+    </function>
+    <!-- ********************** -->
+    <!-- * Cast functions     * -->
+    <!-- ********************** -->
+    <function group='cast' name='DATE' return-type='date'>
+      <formula><![CDATA[(DATE('1900-01-01')+DURATION_FROM_MS(BIGINT(TRUNC(%1*86400000,0))))]]></formula>
+      <argument type='real' />
+    </function>
+    <function group='cast' name='DATE' return-type='date'>
+      <formula><![CDATA[(DATE('1900-01-01')+DURATION_FROM_MS(%1*86400000))]]></formula>
+      <argument type='int' />
+    </function>
+    <function group='cast' name='DATE' return-type='date'>
+      <formula><![CDATA[COALESCE(DATE(%1),DATE(DATETIME(REPLACE(%1,' ','T'))))]]></formula>
+      <argument type='str' />
+    </function>
+    <function group='cast' name='DATE' return-type='date'>
+      <formula>DATE(DATETIME(%1))</formula>
+      <argument type='datetime' />
+    </function>
+    <function group='cast' name='DATE' return-type='date'>
+      <formula>DATE(%1)</formula>
+      <argument type='date' />
+    </function>
+    <function group='cast' name='DATETIME' return-type='datetime'>
+      <formula><![CDATA[(DATETIME(DATE('1900-01-01'))+DURATION_FROM_MS(BIGINT(TRUNC(%1*86400000,0))))]]></formula>
+      <argument type='real' />
+    </function>
+    <function group='cast' name='DATETIME' return-type='datetime'>
+      <formula><![CDATA[(DATETIME(DATE('1900-01-01'))+DURATION_FROM_MS(%1*86400000))]]></formula>
+      <argument type='int' />
+    </function>
+    <function group='cast' name='DATETIME' return-type='datetime'>
+      <formula><![CDATA[DATETIME(PRINT_DATETIME(DATETIME(REPLACE(%1,' ','T')),"YYYY-MM-DDThh:mm:ss"))]]></formula>
+      <argument type='str' />
+    </function>
+    <function group='cast' name='DATETIME' return-type='datetime'>
+      <formula>DATETIME(%1)</formula>
+      <argument type='datetime' />
+    </function>
+    <function group='cast' name='DATETIME' return-type='datetime'>
+      <formula>DATETIME(%1)</formula>
+      <argument type='date' />
+    </function>
+    <function group='cast' name='FLOAT' return-type='real'>
+      <formula>DOUBLE(%1)</formula>
+      <argument type='bool' />
+    </function>
+    <function group='cast' name='FLOAT' return-type='real'>
+      <formula>DOUBLE(%1)</formula>
+      <argument type='real' />
+    </function>
+    <function group='cast' name='FLOAT' return-type='real'>
+      <formula>DOUBLE(%1)</formula>
+      <argument type='int' />
+    </function>
+    <function group='cast' name='FLOAT' return-type='real'>
+      <formula>DOUBLE(%1)</formula>
+      <argument type='str' />
+    </function>
+    <function group='cast' name='FLOAT' return-type='real'>
+      <formula><![CDATA[MS_FROM_DAY_TIME_DURATION(GET_DAY_TIME_DURATION(%1-DATETIME(DATE('1900-01-01'))))/86400000.0]]></formula>
+      <argument type='datetime' />
+    </function>
+    <function group='cast' name='FLOAT' return-type='real'>
+      <formula><![CDATA[MS_FROM_DAY_TIME_DURATION(GET_DAY_TIME_DURATION(%1-DATE('1900-01-01')))/86400000.0]]></formula>
+      <argument type='date' />
+    </function>
+    <function group='cast' name='INT' return-type='int'>
+      <formula>BIGINT(%1)</formula>
+      <argument type='bool' />
+    </function>
+    <function group='cast' name='INT' return-type='int'>
+      <formula>BIGINT(TRUNC(%1,0))</formula>
+      <argument type='real' />
+    </function>
+    <function group='cast' name='INT' return-type='int'>
+      <formula><![CDATA[COALESCE(BIGINT(%1),BIGINT(TRUNC(DOUBLE(%1),0)))]]></formula>
+      <argument type='str' />
+    </function>
+    <function group='cast' name='INT' return-type='int'>
+      <formula><![CDATA[GET_DAY(DATETIME(%1)-DATETIME(DATE('1900-01-01')))]]></formula>
+      <argument type='datetime' />
+    </function>
+    <function group='cast' name='INT' return-type='int'>
+      <formula><![CDATA[GET_DAY(%1-DATE('1900-01-01'))]]></formula>
+      <argument type='date' />
+    </function>
+    <function group='cast' name='REAL' return-type='real'>
+      <formula>DOUBLE(%1)</formula>
+      <argument type='int' />
+    </function>
+    <function group='cast' name='STR' return-type='str'>
+      <formula>STRING(TINYINT(%1))</formula>
+      <argument type='bool' />
+    </function>
+    <function group='cast' name='STR' return-type='str'>
+      <formula>STRING(%1)</formula>
+      <argument type='real' />
+    </function>
+    <function group='cast' name='STR' return-type='str'>
+      <formula>STRING(%1)</formula>
+      <argument type='int' />
+    </function>
+    <function group='cast' name='STR' return-type='str'>
+      <formula>STRING(%1)</formula>
+      <argument type='str' />
+    </function>
+    <function group='cast' name='STR' return-type='str'>
+      <formula><![CDATA[PRINT_DATETIME(DATETIME(%1),'YYYY-MM-DD hh:mm:ss')]]></formula>
+      <argument type='datetime' />
+    </function>
+    <function group='cast' name='STR' return-type='str'>
+      <formula>STRING(%1)</formula>
+      <argument type='date' />
+    </function>
+    <function group='logical' name='IFNULL' return-type='bool'>
+      <formula>COALESCE(%1,%2)</formula>
+      <argument type='bool' />
+      <argument type='bool' />
+    </function>
+    <function group='logical' name='IFNULL' return-type='real'>
+      <formula>COALESCE(%1,%2)</formula>
+      <argument type='real' />
+      <argument type='real' />
+    </function>
+    <function group='logical' name='IFNULL' return-type='int'>
+      <formula>COALESCE(%1,%2)</formula>
+      <argument type='int' />
+      <argument type='int' />
+    </function>
+    <function group='logical' name='IFNULL' return-type='str'>
+      <formula>COALESCE(%1,%2)</formula>
+      <argument type='str' />
+      <argument type='str' />
+    </function>
+    <function group='logical' name='IFNULL' return-type='datetime'>
+      <formula>COALESCE(%1,%2)</formula>
+      <argument type='datetime' />
+      <argument type='datetime' />
+    </function>
+    <function group='logical' name='IFNULL' return-type='date'>
+      <formula>COALESCE(%1,%2)</formula>
+      <argument type='date' />
+      <argument type='date' />
+    </function>
+    <function group='logical' name='IIF' return-type='bool'>
+      <formula>((%1 AND %2) OR ((NOT %1) AND %3))</formula>
+      <argument type='bool' />
+      <argument type='bool' />
+      <argument type='bool' />
+    </function>
+    <function group='logical' name='IIF' return-type='real'>
+      <formula>(CASE WHEN %1 THEN %2 WHEN NOT %1 THEN %3 ELSE NULL END)</formula>
+      <argument type='bool' />
+      <argument type='real' />
+      <argument type='real' />
+    </function>
+    <function group='logical' name='IIF' return-type='real'>
+      <formula>(CASE WHEN %1 THEN %2 WHEN NOT %1 THEN %3 ELSE %4 END)</formula>
+      <argument type='bool' />
+      <argument type='real' />
+      <argument type='real' />
+      <argument type='real' />
+    </function>
+    <function group='logical' name='IIF' return-type='int'>
+      <formula>(CASE WHEN %1 THEN %2 WHEN NOT %1 THEN %3 ELSE NULL END)</formula>
+      <argument type='bool' />
+      <argument type='int' />
+      <argument type='int' />
+    </function>
+    <function group='logical' name='IIF' return-type='int'>
+      <formula>(CASE WHEN %1 THEN %2 WHEN NOT %1 THEN %3 ELSE %4 END)</formula>
+      <argument type='bool' />
+      <argument type='int' />
+      <argument type='int' />
+      <argument type='int' />
+    </function>
+    <function group='logical' name='IIF' return-type='str'>
+      <formula>(CASE WHEN %1 THEN %2 WHEN NOT %1 THEN %3 ELSE NULL END)</formula>
+      <argument type='bool' />
+      <argument type='str' />
+      <argument type='str' />
+    </function>
+    <function group='logical' name='IIF' return-type='str'>
+      <formula>(CASE WHEN %1 THEN %2 WHEN NOT %1 THEN %3 ELSE %4 END)</formula>
+      <argument type='bool' />
+      <argument type='str' />
+      <argument type='str' />
+      <argument type='str' />
+    </function>
+    <function group='logical' name='IIF' return-type='datetime'>
+      <formula>(CASE WHEN %1 THEN %2 WHEN NOT %1 THEN %3 ELSE NULL END)</formula>
+      <argument type='bool' />
+      <argument type='datetime' />
+      <argument type='datetime' />
+    </function>
+    <function group='logical' name='IIF' return-type='datetime'>
+      <formula>(CASE WHEN %1 THEN %2 WHEN NOT %1 THEN %3 ELSE %4 END)</formula>
+      <argument type='bool' />
+      <argument type='datetime' />
+      <argument type='datetime' />
+      <argument type='datetime' />
+    </function>
+    <function group='logical' name='IIF' return-type='date'>
+      <formula>(CASE WHEN %1 THEN %2 WHEN NOT %1 THEN %3 ELSE NULL END)</formula>
+      <argument type='bool' />
+      <argument type='date' />
+      <argument type='date' />
+    </function>
+    <function group='logical' name='IIF' return-type='date'>
+      <formula>(CASE WHEN %1 THEN %2 WHEN NOT %1 THEN %3 ELSE %4 END)</formula>
+      <argument type='bool' />
+      <argument type='date' />
+      <argument type='date' />
+      <argument type='date' />
+    </function>
+    <function group='logical' name='ISNULL' return-type='bool'>
+      <formula>(%1 IS UNKNOWN)</formula>
+      <argument type='bool' />
+    </function>
+    <function group='logical' name='ISNULL' return-type='bool'>
+      <formula>(%1 IS UNKNOWN)</formula>
+      <argument type='real' />
+    </function>
+    <function group='logical' name='ISNULL' return-type='bool'>
+      <formula>(%1 IS UNKNOWN)</formula>
+      <argument type='str' />
+    </function>
+    <function group='logical' name='ISNULL' return-type='bool'>
+      <formula>(%1 IS UNKNOWN)</formula>
+      <argument type='datetime' />
+    </function>
+    <function group='aggregate' name='AVG' return-type='real'>
+      <formula>AVG(%1)</formula>
+      <unagg-formula>%1</unagg-formula>
+      <argument type='real' />
+    </function>
+    <function group='aggregate' name='COUNT' return-type='int'>
+      <formula>COUNT(%1)</formula>
+      <unagg-formula>(CASE WHEN %1 IS UNKNOWN THEN 0 ELSE 1 END)</unagg-formula>
+      <argument type='bool' />
+    </function>
+    <function group='aggregate' name='COUNT' return-type='int'>
+      <formula>COUNT(%1)</formula>
+      <unagg-formula>(CASE WHEN %1 IS UNKNOWN THEN 0 ELSE 1 END)</unagg-formula>
+      <argument type='real' />
+    </function>
+    <function group='aggregate' name='COUNT' return-type='int'>
+      <formula>COUNT(%1)</formula>
+      <unagg-formula>(CASE WHEN %1 IS UNKNOWN THEN 0 ELSE 1 END)</unagg-formula>
+      <argument type='str' />
+    </function>
+    <function group='aggregate' name='COUNT' return-type='int'>
+      <formula>COUNT(%1)</formula>
+      <unagg-formula>(CASE WHEN %1 IS UNKNOWN THEN 0 ELSE 1 END)</unagg-formula>
+      <argument type='datetime' />
+    </function>
+    <function group='aggregate' name='COUNT' return-type='int'>
+      <formula>COUNT(%1)</formula>
+      <unagg-formula>(CASE WHEN %1 IS UNKNOWN THEN 0 ELSE 1 END)</unagg-formula>
+      <argument type='date' />
+    </function>
+    <function group='aggregate' name='COUNTD' return-type='int'>
+      <formula>COUNT(DISTINCT %1)</formula>
+      <unagg-formula>(CASE WHEN %1 IS UNKNOWN THEN 0 ELSE 1 END)</unagg-formula>
+      <argument type='bool' />
+    </function>
+    <function group='aggregate' name='COUNTD' return-type='int'>
+      <formula>COUNT(DISTINCT %1)</formula>
+      <unagg-formula>(CASE WHEN %1 IS UNKNOWN THEN 0 ELSE 1 END)</unagg-formula>
+      <argument type='real' />
+    </function>
+    <function group='aggregate' name='COUNTD' return-type='int'>
+      <formula>COUNT(DISTINCT %1)</formula>
+      <unagg-formula>(CASE WHEN %1 IS UNKNOWN THEN 0 ELSE 1 END)</unagg-formula>
+      <argument type='str' />
+    </function>
+    <function group='aggregate' name='COUNTD' return-type='int'>
+      <formula>COUNT(DISTINCT %1)</formula>
+      <unagg-formula>(CASE WHEN %1 IS UNKNOWN THEN 0 ELSE 1 END)</unagg-formula>
+      <argument type='datetime' />
+    </function>
+    <function group='aggregate' name='COUNTD' return-type='int'>
+      <formula>COUNT(DISTINCT %1)</formula>
+      <unagg-formula>(CASE WHEN %1 IS UNKNOWN THEN 0 ELSE 1 END)</unagg-formula>
+      <argument type='date' />
+    </function>
+    <function group='aggregate' name='MAX' return-type='bool'>
+      <formula>MAX(%1)</formula>
+      <unagg-formula>%1</unagg-formula>
+      <argument type='bool' />
+    </function>
+    <function group='aggregate' name='MAX' return-type='real'>
+      <formula>MAX(%1)</formula>
+      <unagg-formula>%1</unagg-formula>
+      <argument type='real' />
+    </function>
+    <function group='aggregate' name='MAX' return-type='int'>
+      <formula>MAX(%1)</formula>
+      <unagg-formula>%1</unagg-formula>
+      <argument type='int' />
+    </function>
+    <function group='aggregate' name='MAX' return-type='str'>
+      <formula>MAX(%1)</formula>
+      <unagg-formula>%1</unagg-formula>
+      <argument type='str' />
+    </function>
+    <function group='aggregate' name='MAX' return-type='datetime'>
+      <formula>MAX(%1)</formula>
+      <unagg-formula>DATETIME(%1)</unagg-formula>
+      <argument type='datetime' />
+    </function>
+    <function group='aggregate' name='MAX' return-type='date'>
+      <formula>MAX(%1)</formula>
+      <unagg-formula>%1</unagg-formula>
+      <argument type='date' />
+    </function>
+    <function group='aggregate' name='MIN' return-type='bool'>
+      <formula>MIN(%1)</formula>
+      <unagg-formula>%1</unagg-formula>
+      <argument type='bool' />
+    </function>
+    <function group='aggregate' name='MIN' return-type='real'>
+      <formula>MIN(%1)</formula>
+      <unagg-formula>%1</unagg-formula>
+      <argument type='real' />
+    </function>
+    <function group='aggregate' name='MIN' return-type='int'>
+      <formula>MIN(%1)</formula>
+      <unagg-formula>%1</unagg-formula>
+      <argument type='int' />
+    </function>
+    <function group='aggregate' name='MIN' return-type='str'>
+      <formula>MIN(%1)</formula>
+      <unagg-formula>%1</unagg-formula>
+      <argument type='str' />
+    </function>
+    <function group='aggregate' name='MIN' return-type='datetime'>
+      <formula>MIN(%1)</formula>
+      <unagg-formula>DATETIME(%1)</unagg-formula>
+      <argument type='datetime' />
+    </function>
+    <function group='aggregate' name='MIN' return-type='date'>
+      <formula>MIN(%1)</formula>
+      <unagg-formula>%1</unagg-formula>
+      <argument type='date' />
+    </function>
+    <function group='aggregate' name='STDEV' return-type='real'>
+      <formula>STDDEV_SAMP(%1)</formula>
+      <unagg-formula>NULL</unagg-formula>
+      <argument type='real' />
+    </function>
+    <function group='aggregate' name='STDEVP' return-type='real'>
+      <formula>STDDEV_POP(%1)</formula>
+      <unagg-formula><![CDATA[(CASE WHEN %1 IS UNKNOWN THEN NULL ELSE 0.0 END)]]></unagg-formula>
+      <argument type='real' />
+    </function>
+    <function group='aggregate' name='SUM' return-type='real'>
+      <formula>SUM(%1)</formula>
+      <unagg-formula>%1</unagg-formula>
+      <argument type='real' />
+    </function>
+    <function group='aggregate' name='SUM' return-type='int'>
+      <formula>SUM(%1)</formula>
+      <unagg-formula>%1</unagg-formula>
+      <argument type='int' />
+    </function>
+    <function group='aggregate' name='VAR' return-type='real'>
+      <formula>VAR_SAMP(%1)</formula>
+      <unagg-formula>NULL</unagg-formula>
+      <argument type='real' />
+    </function>
+    <function group='aggregate' name='VARP' return-type='real'>
+      <formula>VAR_POP(%1)</formula>
+      <unagg-formula><![CDATA[(CASE WHEN %1 IS UNKNOWN THEN NULL ELSE 0.0 END)]]></unagg-formula>
+      <argument type='real' />
+    </function>
+    <function group='operator' name='!' return-type='bool'>
+      <formula><![CDATA[(NOT %1)]]></formula>
+      <argument type='bool' />
+    </function>
+    <function group='operator' name='!=' return-type='bool'>
+      <formula><![CDATA[(%1!=%2)]]></formula>
+      <argument type='bool' />
+      <argument type='bool' />
+    </function>
+    <function group='operator' name='!=' return-type='bool'>
+      <formula><![CDATA[(%1!=BOOLEAN(%2)]]></formula>
+      <argument type='bool' />
+      <argument type='int' />
+    </function>
+    <function group='operator' name='!=' return-type='bool'>
+      <formula><![CDATA[(BOOLEAN(%1)!=%2]]></formula>
+      <argument type='int' />
+      <argument type='bool' />
+    </function>
+    <function group='operator' name='!=' return-type='bool'>
+      <formula><![CDATA[(%1!=%2)]]></formula>
+      <argument type='real' />
+      <argument type='real' />
+    </function>
+    <function group='operator' name='!=' return-type='bool'>
+      <formula><![CDATA[(%1!=%2)]]></formula>
+      <argument type='str' />
+      <argument type='str' />
+    </function>
+    <function group='operator' name='!=' return-type='bool'>
+      <!-- TODO:string format?-->
+      <formula><![CDATA[(DATETIME(%1)!=DATETIME(%2))]]></formula>
+      <argument type='str' />
+      <argument type='datetime' />
+    </function>
+    <function group='operator' name='!=' return-type='bool'>
+      <!-- TODO:string format?-->
+      <formula><![CDATA[(DATETIME(%1)!=DATETIME(%2))]]></formula>
+      <argument type='datetime' />
+      <argument type='str' />
+    </function>
+    <function group='operator' name='!=' return-type='bool'>
+      <formula><![CDATA[(DATETIME(%1)!=DATETIME(%2))]]></formula>
+      <argument type='datetime' />
+      <argument type='datetime' />
+    </function>
+    <function group='operator' name='!=' return-type='bool'>
+      <formula><![CDATA[(DATETIME(%1)!=DATETIME(%2))]]></formula>
+      <argument type='datetime' />
+      <argument type='date' />
+    </function>
+    <function group='operator' name='!=' return-type='bool'>
+      <formula><![CDATA[(DATETIME(%1)!=DATETIME(%2))]]></formula>
+      <argument type='date' />
+      <argument type='datetime' />
+    </function>
+    <function group='operator' name='!=' return-type='bool'>
+      <formula><![CDATA[(%1!=%2)]]></formula>
+      <argument type='date' />
+      <argument type='date' />
+    </function>
+    <function group='operator' name='%' return-type='real'>
+      <formula><![CDATA[(%1 MOD %2)]]></formula>
+      <argument type='real' />
+      <argument type='real' />
+    </function>
+    <function group='operator' name='%' return-type='int'>
+      <formula><![CDATA[(%1 MOD %2)]]></formula>
+      <argument type='int' />
+      <argument type='int' />
+    </function>
+    <function group='operator' name='&amp;&amp;' return-type='bool'>
+      <formula><![CDATA[(%1 AND %2)]]></formula>
+      <argument type='bool' />
+      <argument type='bool' />
+    </function>
+    <function group='operator' name='*' return-type='real'>
+      <formula><![CDATA[(DOUBLE(%1)*%2)]]></formula>
+      <argument type='real' />
+      <argument type='real' />
+    </function>
+    <function group='operator' name='*' return-type='real'>
+      <formula><![CDATA[(DOUBLE(%1)*%2)]]></formula>
+      <argument type='real' />
+      <argument type='int' />
+    </function>
+    <function group='operator' name='*' return-type='real'>
+      <formula><![CDATA[(%1*DOUBLE(%2))]]></formula>
+      <argument type='int' />
+      <argument type='real' />
+    </function>
+    <function group='operator' name='*' return-type='int'>
+      <formula><![CDATA[(BIGINT(%1)*%2)]]></formula>
+      <argument type='int' />
+      <argument type='int' />
+    </function>
+    <function group='operator' name='+' return-type='real'>
+      <formula><![CDATA[(DOUBLE(%1)+%2)]]></formula>
+      <argument type='real' />
+      <argument type='real' />
+    </function>
+    <function group='operator' name='+' return-type='int'>
+      <formula><![CDATA[(BIGINT(%1)+%2)]]></formula>
+      <argument type='int' />
+      <argument type='int' />
+    </function>
+    <function group='operator' name='+' return-type='str'>
+      <formula><![CDATA[(CASE WHEN %1 IS UNKNOWN OR %2 IS UNKNOWN THEN NULL ELSE (%1||%2) END)]]></formula>
+      <argument type='str' />
+      <argument type='str' />
+    </function>
+    <function group='operator' name='+' return-type='datetime'>
+      <formula><![CDATA[(DATETIME(%1)+DURATION_FROM_MS(BIGINT(TRUNC(%2*86400000,0))))]]></formula>
+      <argument type='datetime' />
+      <argument type='real' />
+    </function>
+    <function group='operator' name='+' return-type='date'>
+      <formula><![CDATA[(%1+DURATION_FROM_MS(%2*86400000))]]></formula>
+      <argument type='date' />
+      <argument type='int' />
+    </function>
+    <function group='operator' name='-' return-type='real'>
+      <formula><![CDATA[(-DOUBLE(%1))]]></formula>
+      <argument type='real' />
+    </function>
+    <function group='operator' name='-' return-type='real'>
+      <formula><![CDATA[(DOUBLE(%1)-%2)]]></formula>
+      <argument type='real' />
+      <argument type='real' />
+    </function>
+    <function group='operator' name='-' return-type='real'>
+      <formula><![CDATA[(MS_FROM_DAY_TIME_DURATION(GET_DAY_TIME_DURATION(DATETIME(%1)-DATETIME(%2)))/86400000.0)]]></formula>
+      <argument type='datetime' />
+      <argument type='datetime' />
+    </function>
+    <function group='operator' name='-' return-type='int'>
+      <formula><![CDATA[(-BIGINT(%1))]]></formula>
+      <argument type='int' />
+    </function>
+    <function group='operator' name='-' return-type='int'>
+      <formula><![CDATA[(BIGINT(%1)-%2)]]></formula>
+      <argument type='int' />
+      <argument type='int' />
+    </function>
+    <function group='operator' name='-' return-type='datetime'>
+      <formula><![CDATA[(DATETIME(%1)-DURATION_FROM_MS(BIGINT(TRUNC(%2*86400000,0))))]]></formula>
+      <argument type='datetime' />
+      <argument type='real' />
+    </function>
+    <function group='operator' name='-' return-type='date'>
+      <formula><![CDATA[(%1-DURATION_FROM_MS(%2*86400000))]]></formula>
+      <argument type='date' />
+      <argument type='int' />
+    </function>
+    <function group='operator' name='/' return-type='real'>
+      <formula><![CDATA[(DOUBLE(%1)/(%2))]]></formula>
+      <argument type='real' />
+      <argument type='real' />
+    </function>
+    <function group='operator' name='/' return-type='real'>
+      <formula><![CDATA[(DOUBLE(%1)/(%2))]]></formula>
+      <argument type='real' />
+      <argument type='int' />
+    </function>
+    <function group='operator' name='/' return-type='real'>
+      <formula><![CDATA[(%1/DOUBLE(%2))]]></formula>
+      <argument type='int' />
+      <argument type='real' />
+    </function>
+    <function group='operator' name='/' return-type='real'>
+      <formula><![CDATA[(%1/%2)]]></formula>
+      <argument type='int' />
+      <argument type='int' />
+    </function>
+    <function group='operator' name='&lt;' return-type='bool'>
+      <formula><![CDATA[(%1<%2)]]></formula>
+      <argument type='real' />
+      <argument type='real' />
+    </function>
+    <function group='operator' name='&lt;' return-type='bool'>
+      <formula><![CDATA[(%1<%2)]]></formula>
+      <argument type='str' />
+      <argument type='str' />
+    </function>
+    <function group='operator' name='&lt;' return-type='bool'>
+      <!-- TODO:string format?-->
+      <formula><![CDATA[(DATETIME(%1)<DATETIME(%2))]]></formula>
+      <argument type='str' />
+      <argument type='datetime' />
+    </function>
+    <function group='operator' name='&lt;' return-type='bool'>
+      <!-- TODO:string format?-->
+      <formula><![CDATA[(DATETIME(%1)<DATETIME(%2))]]></formula>
+      <argument type='datetime' />
+      <argument type='str' />
+    </function>
+    <function group='operator' name='&lt;' return-type='bool'>
+      <formula><![CDATA[(DATETIME(%1)<DATETIME(%2))]]></formula>
+      <argument type='datetime' />
+      <argument type='datetime' />
+    </function>
+    <function group='operator' name='&lt;' return-type='bool'>
+      <formula><![CDATA[(DATETIME(%1)<DATETIME(%2))]]></formula>
+      <argument type='datetime' />
+      <argument type='date' />
+    </function>
+    <function group='operator' name='&lt;' return-type='bool'>
+      <formula><![CDATA[(DATETIME(%1)<DATETIME(%2))]]></formula>
+      <argument type='date' />
+      <argument type='datetime' />
+    </function>
+    <function group='operator' name='&lt;' return-type='bool'>
+      <formula><![CDATA[(%1<%2)]]></formula>
+      <argument type='date' />
+      <argument type='date' />
+    </function>
+    <function group='operator' name='&lt;=' return-type='bool'>
+      <formula><![CDATA[(%1<=%2)]]></formula>
+      <argument type='real' />
+      <argument type='real' />
+    </function>
+    <function group='operator' name='&lt;=' return-type='bool'>
+      <formula><![CDATA[(%1<=%2)]]></formula>
+      <argument type='str' />
+      <argument type='str' />
+    </function>
+    <function group='operator' name='&lt;=' return-type='bool'>
+      <!-- TODO:string format?-->
+      <formula><![CDATA[(DATETIME(%1)<=DATETIME(%2))]]></formula>
+      <argument type='str' />
+      <argument type='datetime' />
+    </function>
+    <function group='operator' name='&lt;=' return-type='bool'>
+      <!-- TODO:string format?-->
+      <formula><![CDATA[(DATETIME(%1)<=DATETIME(%2))]]></formula>
+      <argument type='datetime' />
+      <argument type='str' />
+    </function>
+    <function group='operator' name='&lt;=' return-type='bool'>
+      <formula><![CDATA[(DATETIME(%1)<=DATETIME(%2))]]></formula>
+      <argument type='datetime' />
+      <argument type='datetime' />
+    </function>
+    <function group='operator' name='&lt;=' return-type='bool'>
+      <formula><![CDATA[(DATETIME(%1)<=DATETIME(%2))]]></formula>
+      <argument type='datetime' />
+      <argument type='date' />
+    </function>
+    <function group='operator' name='&lt;=' return-type='bool'>
+      <formula><![CDATA[(DATETIME(%1)<=DATETIME(%2))]]></formula>
+      <argument type='date' />
+      <argument type='datetime' />
+    </function>
+    <function group='operator' name='&lt;=' return-type='bool'>
+      <formula><![CDATA[(%1<=%2)]]></formula>
+      <argument type='date' />
+      <argument type='date' />
+    </function>
+    <function group='operator' name='==' return-type='bool'>
+      <formula><![CDATA[(%1=%2)]]></formula>
+      <argument type='bool' />
+      <argument type='bool' />
+    </function>
+    <function group='operator' name='==' return-type='bool'>
+      <formula><![CDATA[(%1=BOOLEAN(%2))]]></formula>
+      <argument type='bool' />
+      <argument type='int' />
+    </function>
+    <function group='operator' name='==' return-type='bool'>
+      <formula><![CDATA[(BOOLEAN(%1)=%2)]]></formula>
+      <argument type='int' />
+      <argument type='bool' />
+    </function>
+    <function group='operator' name='==' return-type='bool'>
+      <formula><![CDATA[(%1=%2)]]></formula>
+      <argument type='real' />
+      <argument type='real' />
+    </function>
+    <function group='operator' name='==' return-type='bool'>
+      <formula><![CDATA[(%1=%2)]]></formula>
+      <argument type='str' />
+      <argument type='str' />
+    </function>
+    <function group='operator' name='==' return-type='bool'>
+      <!-- TODO:string format?-->
+      <formula><![CDATA[(DATETIME(%1)=DATETIME(%2))]]></formula>
+      <argument type='str' />
+      <argument type='datetime' />
+    </function>
+    <function group='operator' name='==' return-type='bool'>
+      <!-- TODO:string format?-->
+      <formula><![CDATA[(DATETIME(%1)=DATETIME(%2))]]></formula>
+      <argument type='datetime' />
+      <argument type='str' />
+    </function>
+    <function group='operator' name='==' return-type='bool'>
+      <formula><![CDATA[(DATETIME(%1)=DATETIME(%2))]]></formula>
+      <argument type='datetime' />
+      <argument type='datetime' />
+    </function>
+    <function group='operator' name='==' return-type='bool'>
+      <formula><![CDATA[(DATETIME(%1)=DATETIME(%2))]]></formula>
+      <argument type='datetime' />
+      <argument type='date' />
+    </function>
+    <function group='operator' name='==' return-type='bool'>
+      <formula><![CDATA[(DATETIME(%1)=DATETIME(%2))]]></formula>
+      <argument type='date' />
+      <argument type='datetime' />
+    </function>
+    <function group='operator' name='==' return-type='bool'>
+      <formula><![CDATA[(%1=%2)]]></formula>
+      <argument type='date' />
+      <argument type='date' />
+    </function>
+    <function group='operator' name='&gt;' return-type='bool'>
+      <formula><![CDATA[(%1>%2)]]></formula>
+      <argument type='real' />
+      <argument type='real' />
+    </function>
+    <function group='operator' name='&gt;' return-type='bool'>
+      <formula><![CDATA[(%1>%2)]]></formula>
+      <argument type='str' />
+      <argument type='str' />
+    </function>
+    <function group='operator' name='&gt;' return-type='bool'>
+      <!-- TODO:string format?-->
+      <formula><![CDATA[(DATETIME(%1)>DATETIME(%2))]]></formula>
+      <argument type='str' />
+      <argument type='datetime' />
+    </function>
+    <function group='operator' name='&gt;' return-type='bool'>
+      <!-- TODO:string format?-->
+      <formula><![CDATA[(DATETIME(%1)>DATETIME(%2))]]></formula>
+      <argument type='datetime' />
+      <argument type='str' />
+    </function>
+    <function group='operator' name='&gt;' return-type='bool'>
+      <formula><![CDATA[(DATETIME(%1)>DATETIME(%2))]]></formula>
+      <argument type='datetime' />
+      <argument type='datetime' />
+    </function>
+    <function group='operator' name='&gt;' return-type='bool'>
+      <formula><![CDATA[(DATETIME(%1)>DATETIME(%2))]]></formula>
+      <argument type='datetime' />
+      <argument type='date' />
+    </function>
+    <function group='operator' name='&gt;' return-type='bool'>
+      <formula><![CDATA[(DATETIME(%1)>DATETIME(%2))]]></formula>
+      <argument type='date' />
+      <argument type='datetime' />
+    </function>
+    <function group='operator' name='&gt;' return-type='bool'>
+      <formula><![CDATA[(%1>%2)]]></formula>
+      <argument type='date' />
+      <argument type='date' />
+    </function>
+    <function group='operator' name='&gt;=' return-type='bool'>
+      <formula><![CDATA[(%1>=%2)]]></formula>
+      <argument type='real' />
+      <argument type='real' />
+    </function>
+    <function group='operator' name='&gt;=' return-type='bool'>
+      <formula><![CDATA[(%1>=%2)]]></formula>
+      <argument type='str' />
+      <argument type='str' />
+    </function>
+    <function group='operator' name='&gt;=' return-type='bool'>
+      <!-- TODO:string format?-->
+      <formula><![CDATA[(DATETIME(%1)>=DATETIME(%2))]]></formula>
+      <argument type='str' />
+      <argument type='datetime' />
+    </function>
+    <function group='operator' name='&gt;=' return-type='bool'>
+      <!-- TODO:string format?-->
+      <formula><![CDATA[(DATETIME(%1)>=DATETIME(%2))]]></formula>
+      <argument type='datetime' />
+      <argument type='str' />
+    </function>
+    <function group='operator' name='&gt;=' return-type='bool'>
+      <formula><![CDATA[(DATETIME(%1)>=DATETIME(%2))]]></formula>
+      <argument type='datetime' />
+      <argument type='datetime' />
+    </function>
+    <function group='operator' name='&gt;=' return-type='bool'>
+      <formula><![CDATA[(DATETIME(%1)>=DATETIME(%2))]]></formula>
+      <argument type='datetime' />
+      <argument type='datetime' />
+    </function>
+    <function group='operator' name='&gt;=' return-type='bool'>
+      <formula><![CDATA[(DATETIME(%1)>=DATETIME(%2))]]></formula>
+      <argument type='datetime' />
+      <argument type='date' />
+    </function>
+    <function group='operator' name='&gt;=' return-type='bool'>
+      <formula><![CDATA[(DATETIME(%1)>=DATETIME(%2))]]></formula>
+      <argument type='date' />
+      <argument type='datetime' />
+    </function>
+    <function group='operator' name='&gt;=' return-type='bool'>
+      <formula><![CDATA[(%1>=%2)]]></formula>
+      <argument type='date' />
+      <argument type='date' />
+    </function>
+    <function group='operator' name='^^' return-type='real'>
+      <formula><![CDATA[(CASE WHEN (%1<0) AND (FLOOR(%2)!=%2) THEN NULL ELSE POWER(%1,%2) END)]]></formula>
+      <argument type='real' />
+      <argument type='real' />
+    </function>
+    <function group='operator' name='^^' return-type='real'>
+      <formula><![CDATA[(CASE WHEN (%1<0) AND (FLOOR(%2)!=%2) THEN NULL ELSE POWER(%1,%2) END)]]></formula>
+      <argument type='real' />
+      <argument type='int' />
+    </function>
+    <function group='operator' name='^^' return-type='real'>
+      <formula>POWER(DOUBLE(%1),%2)</formula>
+      <argument type='int' />
+      <argument type='int' />
+    </function>
+    <function group='operator' name='||' return-type='bool'>
+      <formula><![CDATA[(%1 OR %2)]]></formula>
+      <argument type='bool' />
+      <argument type='bool' />
+    </function>
+    <function group='date' name='DAY' return-type='int'>
+      <formula>GET_DAY(DATETIME(%1))</formula>
+      <argument type='datetime' />
+    </function>
+    <function group='date' name='ISDATE' return-type='bool'>
+      <formula><![CDATA[(DATE(%1) IS NOT UNKNOWN)]]></formula>
+      <argument type='str' />
+    </function>
+    <function group='date' name='MAX' return-type='datetime'>
+      <formula>STRICT_MAX([DATETIME(%1),DATETIME(%2)])</formula>
+      <argument type='datetime' />
+      <argument type='datetime' />
+    </function>
+    <function group='date' name='MAX' return-type='date'>
+      <formula>STRICT_MAX([%1,%2])</formula>
+      <argument type='date' />
+      <argument type='date' />
+    </function>
+    <function group='date' name='MIN' return-type='datetime'>
+      <formula>STRICT_MIN([DATETIME(%1),DATETIME(%2)])</formula>
+      <argument type='datetime' />
+      <argument type='datetime' />
+    </function>
+    <function group='date' name='MIN' return-type='date'>
+      <formula>STRICT_MIN([%1,%2])</formula>
+      <argument type='date' />
+      <argument type='date' />
+    </function>
+    <function group='date' name='MONTH' return-type='int'>
+      <formula>GET_MONTH(DATETIME(%1))</formula>
+      <argument type='datetime' />
+    </function>
+    <function group='date' name='NOW' return-type='datetime'>
+      <formula>CURRENT_DATETIME()</formula>
+    </function>
+    <function group='date' name='QUARTER' return-type='int'>
+      <formula>QUARTER_OF_YEAR(DATETIME(%1))</formula>
+      <argument type='datetime' />
+    </function>
+    <function group='date' name='TIMESTAMP_TO_USEC' return-type='int'>
+      <formula>UNIX_TIME_FROM_DATETIME_IN_SECS(DATETIME(%1))</formula>
+      <argument type='datetime' />
+    </function>
+    <function group='date' name='TODAY' return-type='date'>
+      <formula>CURRENT_DATE()</formula>
+    </function>
+    <function group='date' name='USEC_TO_TIMESTAMP' return-type='datetime'>
+      <formula>DATETIME_FROM_UNIX_TIME_IN_SECS(%1)</formula>
+      <argument type='int' />
+    </function>
+    <function group='date' name='WEEK' return-type='int'>
+      <formula>WEEK_OF_YEAR(DATETIME(%1))</formula>
+      <argument type='datetime' />
+    </function>
+    <function group='date' name='YEAR' return-type='int'>
+      <formula>GET_YEAR(DATETIME(%1))</formula>
+      <argument type='datetime' />
+    </function>
+    <!--TODO:IMPLEMENT-->
+    <!--function group='date' name='ISOYEAR' return-type='int'>
+      <formula></formula>
+      <argument type='datetime' />
+    </function-->
+    <!--TODO:IMPLEMENT-->
+    <!--function group='date' name='ISOQUARTER' return-type='int'>
+      <formula></formula>
+      <argument type='datetime' />
+    </function-->
+    <!--TODO:IMPLEMENT-->
+    <!--function group='date' name='ISOWEEK' return-type='int'>
+      <formula></formula>
+      <argument type='datetime' />
+    </function-->
+    <!--TODO:IMPLEMENT-->
+    <!--function group='date' name='ISOWEEKDAY' return-type='int'>
+      <argument type='datetime' />
+    </function-->
+    <date-function name='DATEADD' return-type='datetime'>
+      <!--TODO:IMPLEMENT-->
+      <!--formula></formula>
+      <formula part='iso-week'></formula>
+      <formula part='iso-weekday'></formula>
+      <formula part='iso-year'></formula>
+      <formula part='iso-quarter'></formula-->
+      <formula part='year'><![CDATA[(DATETIME(%3)+DURATION_FROM_MONTHS(BIGINT(TRUNC(%2*12.0,0))))]]></formula>
+      <formula part='quarter'><![CDATA[(DATETIME(%3)+DURATION_FROM_MONTHS(BIGINT(TRUNC(%2*3.0,0))))]]></formula>
+      <formula part='month'><![CDATA[(DATETIME(%3)+DURATION_FROM_MONTHS(BIGINT(TRUNC(%2,0))))]]></formula>
+      <formula part='dayofyear'><![CDATA[(DATETIME(%3)+DURATION_FROM_MS(BIGINT(TRUNC(%2*86400000.0,0))))]]></formula>
+      <formula part='day'><![CDATA[(DATETIME(%3)+DURATION_FROM_MS(BIGINT(TRUNC(%2*86400000.0,0))))]]></formula>
+      <formula part='weekday'><![CDATA[(DATETIME(%3)+DURATION_FROM_MS(BIGINT(TRUNC(%2*86400000.0,0))))]]></formula>
+      <formula part='week'><![CDATA[(DATETIME(%3)+DURATION_FROM_MS(BIGINT(TRUNC(%2*86400000.0*7.0,0))))]]></formula>
+      <formula part='hour'><![CDATA[(DATETIME(%3)+DURATION_FROM_MS(BIGINT(TRUNC(%2*3600000.0,0))))]]></formula>
+      <formula part='minute'><![CDATA[(DATETIME(%3)+DURATION_FROM_MS(BIGINT(TRUNC(%2*60000.0,0))))]]></formula>
+      <formula part='second'><![CDATA[(DATETIME(%3)+DURATION_FROM_MS(BIGINT(TRUNC(%2*1000.0,0))))]]></formula>
+      <argument type='localstr' />
+      <argument type='real' />
+      <argument type='datetime' />
+    </date-function>
+    <date-function name='DATEDIFF' return-type='int'>
+      <formula part='year'><![CDATA[(GET_YEAR(DATETIME(%3))-GET_YEAR(DATETIME(%2)))]]></formula>
+      <formula part='quarter'><![CDATA[BIGINT((4*GET_YEAR(DATETIME(%3))+TRUNC((GET_MONTH(DATETIME(%3))-1)/3+1,0))-(4*GET_YEAR(DATETIME(%2))+TRUNC((GET_MONTH(DATETIME(%2))-1)/3+1,0)))]]></formula>
+      <formula part='month'><![CDATA[((12*GET_YEAR(DATETIME(%3))+GET_MONTH(DATETIME(%3)))-(12*GET_YEAR(DATETIME(%2))+GET_MONTH(DATETIME(%2))))]]></formula>
+      <formula part='dayofyear'><![CDATA[(MS_FROM_DAY_TIME_DURATION(GET_DAY_TIME_DURATION(DATETIME(%3)-DATETIME(%2))) DIV 86400000)]]></formula>
+      <formula part='day'><![CDATA[(MS_FROM_DAY_TIME_DURATION(GET_DAY_TIME_DURATION(DATETIME(%3)-DATETIME(%2))) DIV 86400000)]]></formula>
+      <formula part='weekday'><![CDATA[(MS_FROM_DAY_TIME_DURATION(GET_DAY_TIME_DURATION(DATETIME(%3)-DATETIME(%2))) DIV 86400000)]]></formula>
+      <formula part='week'><![CDATA[(BIGINT(TRUNC(GET_DAY((DATETIME(%3)-DURATION_FROM_MS((DAY_OF_WEEK(DATETIME(%3))-1)*86400000))-(DATETIME(%2)-DURATION_FROM_MS((DAY_OF_WEEK(DATETIME(%2))-1)*86400000)))/7,0)))]]></formula>
+      <formula part='hour'><![CDATA[(MS_FROM_DAY_TIME_DURATION(GET_DAY_TIME_DURATION(DATETIME(%3)-DATETIME(%2))) DIV 3600000)]]></formula>
+      <formula part='minute'><![CDATA[(MS_FROM_DAY_TIME_DURATION(GET_DAY_TIME_DURATION(DATETIME(%3)-DATETIME(%2))) DIV 60000)]]></formula>
+      <formula part='second'><![CDATA[(MS_FROM_DAY_TIME_DURATION(GET_DAY_TIME_DURATION(DATETIME(%3)-DATETIME(%2))) DIV 1000)]]></formula>
+      <argument type='localstr' />
+      <argument type='datetime' />
+      <argument type='datetime' />
+    </date-function>
+    <date-function name='DATEDIFF' return-type='int'>
+      <formula part='week'><![CDATA[(BIGINT(TRUNC(GET_DAY((DATETIME(%3)-DURATION_FROM_MS((DAY_OF_WEEK(DATETIME(%3),%4)-1)*86400000))-(DATETIME(%2)-DURATION_FROM_MS((DAY_OF_WEEK(DATETIME(%2),%4)-1)*86400000)))/7,0)))]]></formula>
+      <argument type='localstr' />
+      <argument type='datetime' />
+      <argument type='datetime' />
+      <argument type='localstr' />
+    </date-function>
+    <date-function name='DATENAME' return-type='str'>
+      <formula><![CDATA[PRINT_DATETIME(DATETIME(%2),'%1')]]></formula>
+      <formula part='year'><![CDATA[STRING(GET_YEAR(DATETIME(%2)))]]></formula>
+      <formula part='quarter'><![CDATA[STRING(QUARTER_OF_YEAR(DATETIME(%2)))]]></formula>
+      <formula part='month'><![CDATA[PRINT_DATETIME(DATETIME(%2),'MMMM')]]></formula>
+      <formula part='dayofyear'><![CDATA[STRING(DAY_OF_YEAR(DATETIME(%2)))]]></formula>
+      <formula part='day'><![CDATA[STRING(GET_DAY(DATETIME(%2)))]]></formula>
+      <formula part='weekday'><![CDATA[STRING(DAY_OF_WEEK(DATETIME(%2)))]]></formula>
+      <formula part='week'><![CDATA[STRING(WEEK_OF_YEAR(DATETIME(%2)))]]></formula>
+      <formula part='hour'><![CDATA[STRING(GET_HOUR(DATETIME(%2)))]]></formula>
+      <formula part='minute'><![CDATA[STRING(GET_MINUTE(DATETIME(%2)))]]></formula>
+      <formula part='second'><![CDATA[STRING(GET_SECOND(DATETIME(%2)))]]></formula>
+      <argument type='localstr' />
+      <argument type='datetime' />
+    </date-function>
+    <date-function name='DATENAME' return-type='str'>
+      <formula part='week'><![CDATA[STRING(WEEK_OF_YEAR(DATETIME(%2),%3))]]></formula>
+      <argument type='localstr' />
+      <argument type='datetime' />
+      <argument type='localstr' />
+    </date-function>
+    <date-function name='DATEPARSE' return-type='datetime'>
+      <formula>DATETIME(%2,'%1')</formula>
+      <argument type='localstr' />
+      <argument type='str' />
+    </date-function>
+    <date-function name='DATEPART' return-type='int'>
+      <formula part='year'>GET_YEAR(DATETIME(%2))</formula>
+      <formula part='quarter'>QUARTER_OF_YEAR(DATETIME(%2))</formula>
+      <formula part='month'>GET_MONTH(DATETIME(%2))</formula>
+      <formula part='dayofyear'>DAY_OF_YEAR(DATETIME(%2))</formula>
+      <formula part='day'>GET_DAY(DATETIME(%2))</formula>
+      <formula part='weekday'>DAY_OF_WEEK(DATETIME(%2))</formula>
+      <formula part='week'>WEEK_OF_YEAR(DATETIME(%2))</formula>
+      <formula part='hour'>GET_HOUR(DATETIME(%2))</formula>
+      <formula part='minute'>GET_MINUTE(DATETIME(%2))</formula>
+      <formula part='second'>GET_SECOND(DATETIME(%2))</formula>
+      <argument type='localstr' />
+      <argument type='datetime' />
+    </date-function>
+    <date-function name='DATEPART' return-type='int'>
+      <formula part='week'><![CDATA[WEEK_OF_YEAR(DATETIME(%2),%3)]]></formula>
+      <argument type='localstr' />
+      <argument type='datetime' />
+      <argument type='localstr' />
+    </date-function>
+    <date-function name='DATETRUNC' return-type='datetime'>
+      <formula part='year'>DATETIME(SUBSTR(PRINT_DATETIME(DATETIME(%2),"YYYY-MM-DDThh:mm:ss"),0,4)||"-01-01T00:00:00")</formula>
+      <formula part='quarter'>PARSE_DATETIME(SUBSTR(PRINT_DATETIME(DATETIME(%2),"YYYY-Q-DDThh:mm:ss"),0,6)||"-01T00:00:00","YYYY-Q-DDThh:mm:ss")</formula>
+      <formula part='month'>DATETIME(SUBSTR(PRINT_DATETIME(DATETIME(%2),"YYYY-MM-DDThh:mm:ss"),0,7)||"-01T00:00:00")</formula>
+      <formula part='dayofyear'>DATETIME(SUBSTR(PRINT_DATETIME(DATETIME(%2),"YYYY-MM-DDThh:mm:ss"),0,10)||"T00:00:00")</formula>
+      <formula part='day'>DATETIME(SUBSTR(PRINT_DATETIME(DATETIME(%2),"YYYY-MM-DDThh:mm:ss"),0,10)||"T00:00:00")</formula>
+      <formula part='weekday'>DATETIME(SUBSTR(PRINT_DATETIME(DATETIME(%2),"YYYY-MM-DDThh:mm:ss"),0,10)||"T00:00:00")</formula>
+      <formula part='week'>DATETIME(SUBSTR(PRINT_DATETIME(DATETIME(%2)-DURATION_FROM_MS((DAY_OF_WEEK(DATETIME(%2))-1)*86400000),"YYYY-MM-DDThh:mm:ss"),0,10)||"T00:00:00")</formula>
+      <formula part='hour'>DATETIME(SUBSTR(PRINT_DATETIME(DATETIME(%2),"YYYY-MM-DDThh:mm:ss"),0,13)||":00:00")</formula>
+      <formula part='minute'>DATETIME(SUBSTR(PRINT_DATETIME(DATETIME(%2),"YYYY-MM-DDThh:mm:ss"),0,16)||":00")</formula>
+      <formula part='second'>DATETIME(PRINT_DATETIME(DATETIME(%2),"YYYY-MM-DDThh:mm:ss"))</formula>
+      <argument type='localstr' />
+      <argument type='datetime' />
+    </date-function>
+    <date-function name='DATETRUNC' return-type='datetime'>
+      <formula part='week'>DATETIME(SUBSTR(PRINT_DATETIME(DATETIME(%2)-DURATION_FROM_MS((DAY_OF_WEEK(DATETIME(%2),%3)-1)*86400000),"YYYY-MM-DDThh:mm:ss"),0,10)||"T00:00:00")</formula>
+      <argument type='localstr' />
+      <argument type='datetime' />
+      <argument type='localstr' />
+    </date-function>
+    <native-split-function>
+      <formula part='left'>SPLIT(%1,%2)[%3-1]</formula>
+      <formula part='right'>REVERSE(SPLIT(REVERSE(%1),REVERSE(%2))[%3*(-1)-1])</formula>
+    </native-split-function>
+  </function-map>
+
+  <supported-aggregations>
+    <aggregation value='AGG_COUNT'/>
+    <aggregation value='AGG_COUNTD'/>
+    <aggregation value='AGG_SUM'/>
+    <aggregation value='AGG_AVG'/>
+    <aggregation value='AGG_MIN'/>
+    <aggregation value='AGG_MAX'/>
+    <aggregation value='AGG_STDEV'/>
+    <aggregation value='AGG_STDEVP'/>
+    <aggregation value='AGG_VAR'/>
+    <aggregation value='AGG_VARP'/>
+
+    <aggregation value='AGG_YEAR'/>
+    <aggregation value='AGG_QTR'/>
+    <aggregation value='AGG_MONTH'/>
+    <aggregation value='AGG_DAY'/>
+    <aggregation value='AGG_WEEK'/>
+    <aggregation value='AGG_WEEKDAY'/>
+    <aggregation value='AGG_MONTHYEAR'/>
+    <aggregation value='AGG_MDY'/>
+    <aggregation value='AGG_HOUR'/>
+    <aggregation value='AGG_MINUTE'/>
+    <aggregation value='AGG_SECOND'/>
+    <aggregation value='AGG_ISO_YEAR'/>
+    <aggregation value='AGG_ISO_QTR'/>
+    <aggregation value='AGG_ISO_WEEK'/>
+    <aggregation value='AGG_ISO_WEEKDAY'/>
+
+    <aggregation value='TRUNC_YEAR'/>
+    <aggregation value='TRUNC_QTR'/>
+    <aggregation value='TRUNC_MONTH'/>
+    <aggregation value='TRUNC_DAY'/>
+    <aggregation value='TRUNC_WEEK'/>
+    <aggregation value='TRUNC_HOUR'/>
+    <aggregation value='TRUNC_MINUTE'/>
+    <aggregation value='TRUNC_SECOND'/>
+    <!--TODO:IMPLEMENT
+    <aggregation value='TRUNC_ISO_YEAR'/>
+    <aggregation value='TRUNC_ISO_QTR'/>
+    <aggregation value='TRUNC_ISO_WEEK'/>
+    <aggregation value='TRUNC_ISO_WEEKDAY'/-->
+  </supported-aggregations>
+
+  <sql-format>
+    <!-- TODO:IMPLEMENT -->
+    <date-literal-escape value='Standard' />
+    <date-parts>
+      <date-part-group>
+        <!-- Default: used by DATEPART and DATEDIFF -->
+        <part name='year' value='YEAR' />
+        <part name='quarter' value='QUARTER' />
+        <part name='month' value='MONTH' />
+        <part name='week' value='WEEK' />
+        <part name='weekday' value='DOW' />
+        <part name='dayofyear' value='DOY' />
+        <part name='day' value='DAY' />
+        <part name='hour' value='HOUR' />
+        <part name='minute' value='MINUTE' />
+        <part name='second' value='SECOND' />
+      </date-part-group>
+      <date-part-group>
+        <date-function name='DATENAME' />
+        <part name='year' value='YYYY' />
+        <part name='quarter' value='Q' />
+        <part name='month' value='MMMM' />
+        <part name='dayofyear' value='DDD' />
+        <part name='day' value='DD' />
+        <part name='weekday' value='EEEE' />
+        <part name='week' value='' />
+        <part name='hour' value='hh' />
+        <part name='minute' value='mm' />
+        <part name='second' value='ss' />
+      </date-part-group>
+      <date-part-group>
+        <date-function name='DATEADD' />
+        <part name='year' value='YEAR' />
+        <part name='quarter' value='QUARTER' />
+        <part name='month' value='MONTH' />
+        <part name='week' value='WEEK' />
+        <part name='weekday' value='DAY' />
+        <part name='dayofyear' value='DAY' />
+        <part name='day' value='DAY' />
+        <part name='hour' value='HOUR' />
+        <part name='minute' value='MINUTE' />
+        <part name='second' value='SECOND' />
+      </date-part-group>
+      <date-part-group>
+        <date-function name='DATETRUNC' />
+        <part name='year' value='YEAR' />
+        <part name='quarter' value='QUARTER' />
+        <part name='month' value='MONTH' />
+        <part name='week' value='WEEK' />
+        <part name='weekday' value='DAY' />
+        <part name='dayofyear' value='DAY' />
+        <part name='day' value='DAY' />
+        <part name='hour' value='HOUR' />
+        <part name='minute' value='MINUTE' />
+        <part name='second' value='SECOND' />
+      </date-part-group>
+    </date-parts>
+    <format-bool-as-value value='TrueFirst' />
+    <format-column-definition>
+      <local-type name='int'>
+        <remote-type name='I1' value='TINYINT' />
+        <remote-type name='I2' value='SMALLINT' />
+        <remote-type name='I4' value='INT' />
+        <remote-type name='default' value='BIGINT' />
+      </local-type>
+      <local-type name='real'>
+        <remote-type name='R4' value='FLOAT' />
+        <remote-type name='default' value='DOUBLE' />
+      </local-type>
+      <local-type name='str'>
+        <remote-type name='default' value='STRING' />
+      </local-type>
+      <local-type name='datetime'>
+        <remote-type name='default' value='DATETIME' />
+      </local-type>
+      <local-type name='date'>
+        <remote-type name='default' value='DATE' />
+      </local-type>
+      <local-type name='bool'>
+        <remote-type name='default' value='BOOLEAN' />
+      </local-type>
+    </format-column-definition>
+    <format-create-table>
+      <formula>CREATE DATASET %n (%f)</formula>
+    </format-create-table>
+    <format-date-literal formula="DATE('%1')"  format='yyyy-MM-dd' />
+    <format-datetime-literal formula="DATETIME('%1')" format="yyyy-MM-dd'T'HH:mm:ss" />
+    <format-drop-table>
+      <formula>DROP DATASET %1</formula>
+    </format-drop-table>
+    <format-false value='FALSE' />
+    <format-if-then-else value='Case' />
+    <format-index value='ColumnNameOnly' />
+    <format-insert value='Individual' />
+    <format-is-distinct value='Keyword' />
+    <format-order-by value='Nulls' />
+    <format-select>
+      <part name='Select' value='SELECT %1' />
+      <part name='From' value='FROM %1' />
+      <part name='Where' value='WHERE %1' />
+      <part name='Group' value='GROUP BY %1' />
+      <part name='Having' value='HAVING %1' />
+      <part name='OrderBy' value='ORDER BY %1' />
+      <part name='Top' value='LIMIT %1' />
+    </format-select>
+    <format-simple-case value='Case' />
+    <!--format-stored-proc-call--> <!-- Not supported -->
+    <format-string-literal value='Extended' />
+    <format-true value='TRUE' />
+    <icu-date-token-map>
+      <!-- used by DATEPARSE -->
+      <!-- http://userguide.icu-project.org/formatparse/datetime -->
+      <token key="G" value="" /> <!-- era designator (AD) -->
+
+      <token key="y" value="YYYY" />    <!-- year (1996) -->
+      <token key="yy" value="YY" />     <!-- year (96) -->
+      <token key="yyyy" value="YYYY" /> <!-- year (1996) -->
+
+      <token key="Y" value="" />        <!-- year of "Week of Year" (1997) -->
+      <token key="YY" value="" />       <!-- year of "Week of Year" (97) -->
+      <token key="YYYY" value="" />     <!-- year of "Week of Year" (1997) -->
+
+      <token key="u" value="" />        <!-- extended year (4601) -->
+      <token key="U" value="" />        <!-- cyclic year name,as in Chinese lunar calendar -->
+
+      <token key="Q" value="Q" />       <!-- quarter (2) -->
+      <token key="QQ" value="QQ" />     <!-- quarter (02) -->
+      <token key="QQQ" value="" />      <!-- quarter (Q2) -->
+      <token key="QQQQ" value="" />     <!-- quarter (2nd quarter) -->
+
+      <token key="q" value="Q" />       <!-- Stand Alone quarter (2) -->
+      <token key="qq" value="" />       <!-- Stand Alone quarter (02) -->
+      <token key="qqq" value="" />      <!-- Stand Alone quarter (Q2) -->
+      <token key="qqqq" value="" />     <!-- Stand Alone quarter (2nd quarter) -->
+
+      <token key="M" value="M" />       <!-- month in year (9) -->
+      <token key="MM" value="MM" />     <!-- month in year (09) -->
+      <token key="MMM" value="MMM" />   <!-- month in year (Sep) -->
+      <token key="MMMM" value="MMMM" /> <!-- month in year (September) -->
+      <token key="MMMMM" value="" />    <!-- month in year (S) -->
+
+      <token key="L" value="M" />         <!-- Stand Alone month in year (9) -->
+      <token key="LL" value="MM" />       <!-- Stand Alone month in year (09) -->
+      <token key="LLL" value="MMM" />     <!-- Stand Alone month in year (Sep) -->
+      <token key="LLLL" value="MMMMM" />  <!-- Stand Alone month in year (September) -->
+      <token key="LLLLL" value="" />      <!-- Stand Alone month in year (S) -->
+
+      <token key="w" value="" />        <!-- week of year (27) -->
+      <token key="ww" value="" />       <!-- week of year (27) -->
+      <token key="W" value="" />        <!-- week of month (2) -->
+
+      <token key="d" value="D" />       <!-- day in month (2) -->
+      <token key="dd" value="DD" />     <!-- day in month (02) -->
+
+      <token key="D" value="DDD" />     <!-- day of year (189) -->
+      <token key="F" value="" />        <!-- day of week in month (2 (2nd Wed in July)) -->
+
+      <token key="g" value="" />        <!-- modified julian day (2451334) -->
+
+      <token key="E" value="EEE" />       <!-- day of week (Tue) -->
+      <token key="EE" value="EEE" />      <!-- day of week (Tue) -->
+      <token key="EEE" value="EEE" />     <!-- day of week (Tue) -->
+      <token key="EEEE" value="EEEEy" />  <!-- day of week (Tuesday) -->
+      <token key="EEEEE" value="" />      <!-- day of week (T) -->
+
+      <token key="e" value="" />          <!-- local day of week (2) -->
+      <token key="ee" value="" />         <!-- local day of week (2) -->
+      <token key="eee" value="EEE" />     <!-- local day of week (Tue) -->
+      <token key="eeee" value="EEEE" />   <!-- local day of week (Tuesday) -->
+      <token key="eeeee" value="" />      <!-- local day of week (T) -->
+
+      <token key="c" value="" />          <!-- Stand Alone local day of week (2) -->
+      <token key="cc" value="" />         <!-- Stand Alone local day of week (2) -->
+      <token key="ccc" value="EEE" />     <!-- Stand Alone local day of week (Tue) -->
+      <token key="cccc" value="EEEE" />   <!-- Stand Alone local day of week (Tuesday) -->
+      <token key="ccccc" value="" />      <!-- Stand Alone local day of week (T) -->
+
+      <token key="a" value="a" />         <!-- am/pm marker (pm) -->
+
+      <token key="h" value="H" />         <!-- hour in am/pm 1:12 (7) -->
+      <token key="hh" value="HH" />       <!-- hour in am/pm 1:12 (07) -->
+
+      <token key="H" value="H" />         <!-- hour in day 0:23 (0) -->
+      <token key="HH" value="HH" />       <!-- hour in day 0:23 (00) -->
+
+      <token key="k" value="" />          <!-- hour in day 1:24 (24) -->
+      <token key="kk" value="" />         <!-- hour in day 1:24 (24) -->
+
+      <token key="K" value="" />          <!-- hour in am/pm 0:11 (0) -->
+      <token key="KK" value="" />         <!-- hour in am/pm 0:11 (00) -->
+
+      <token key="m" value="m" />         <!-- minute in hour (4) -->
+      <token key="mm" value="mm" />       <!-- minute in hour (04) -->
+
+      <token key="s" value="s" />         <!-- second in minute (5) -->
+      <token key="ss" value="ss" />       <!-- second in minute (05) -->
+
+      <token key="S" value="" />          <!-- millisecond (2) -->
+      <token key="SS" value="" />         <!-- millisecond (23) -->
+      <token key="SSS" value="SSS" />     <!-- millisecond (235) -->
+      <token key="SSSS" value="" />       <!-- millisecond (2350) -->
+
+      <token key="A" value="" />          <!-- millisecond in day (61201235) -->
+
+      <token key="z" value="z" />         <!-- Time Zone: specific non-location (PDT) -->
+      <token key="zz" value="z" />        <!-- Time Zone: specific non-location (PDT) -->
+      <token key="zzz" value="z" />       <!-- Time Zone: specific non-location (PDT) -->
+      <token key="zzzz" value="" />       <!-- Time Zone: specific non-location (Pacific Daylight Time) -->
+
+      <token key="Z" value="z" />         <!-- Time Zone: RFC 822 (-0800) -->
+      <token key="ZZ" value="z" />        <!-- Time Zone: RFC 822 (-0800) -->
+      <token key="ZZZ" value="z" />       <!-- Time Zone: RFC 822 (-0800) -->
+      <token key="ZZZZ" value="z" />      <!-- Time Zone: localized GMT (GMT-08:00) -->
+      <token key="ZZZZZ" value="z" />     <!-- Time Zone: ISO8601 (-08:00) -->
+
+      <token key="v" value="z" />         <!-- Time Zone: generic non-location (PT) -->
+      <token key="vvvv" value="z" />      <!-- Time Zone: generic non-location (Pacific Time or United States (Los Angeles)) -->
+
+      <token key="V" value="z" />         <!-- Time Zone: specific non-location,identical to z (PDT) -->
+      <token key="VVVV" value="z" />      <!-- Time Zone: generic location (United States (Los Angeles)) -->
+    </icu-date-token-map>
+    <id-max-length value='251' />
+    <id-quotes value="`"/>
+    <start-of-week-offset value='1' /> <!-- 1=Sun,2=Mon,... (as returned by DATEPART translation above) -->
+    <supported-joins>
+      <part name="Inner"/>
+      <part name="Left"/>
+      <part name="Right"/>
+      <part name="Cross"/>
+    </supported-joins>
+  </sql-format>
+</dialect>

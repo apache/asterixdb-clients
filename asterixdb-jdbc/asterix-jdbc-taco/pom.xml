@@ -1,0 +1,260 @@
+<!--
+ ! Licensed to the Apache Software Foundation (ASF) under one
+ ! or more contributor license agreements.  See the NOTICE file
+ ! distributed with this work for additional information
+ ! regarding copyright ownership.  The ASF licenses this file
+ ! to you under the Apache License, Version 2.0 (the
+ ! "License"); you may not use this file except in compliance
+ ! with the License.  You may obtain a copy of the License at
+ !
+ !   http://www.apache.org/licenses/LICENSE-2.0
+ !
+ ! Unless required by applicable law or agreed to in writing,
+ ! software distributed under the License is distributed on an
+ ! "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ ! KIND, either express or implied.  See the License for the
+ ! specific language governing permissions and limitations
+ ! under the License.
+ !-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <artifactId>apache-asterixdb-jdbc</artifactId>
+    <groupId>org.apache.asterix</groupId>
+    <version>0.9.7-SNAPSHOT</version>
+  </parent>
+  <artifactId>asterix-jdbc-taco</artifactId>
+  <packaging>jar</packaging>
+
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+      <comments>A business-friendly OSS license</comments>
+    </license>
+  </licenses>
+
+  <properties>
+    <root.dir>${basedir}/..</root.dir>
+    <build.taco.init.stage>none</build.taco.init.stage>
+    <build.taco.validate.stage>none</build.taco.validate.stage>
+    <build.taco.directory>${project.build.directory}/taco</build.taco.directory>
+    <build.taco.gensrc.directory>${build.taco.directory}/generated-sources</build.taco.gensrc.directory>
+    <build.taco.log.directory>${build.taco.directory}</build.taco.log.directory>
+    <build.venv.directory>${project.build.directory}/venv</build.venv.directory>
+    <build.venv.pyhton.path>${build.venv.directory}/bin/python</build.venv.pyhton.path>
+    <taco.sourceDirectory>${project.basedir}/src/main/taco</taco.sourceDirectory>
+
+    <taco.plugin.class>asterixdb_jdbc</taco.plugin.class>
+    <taco.plugin.name>AsterixDB</taco.plugin.name>
+    <!--suppress UnresolvedMavenProperty -->
+    <taco.plugin.version>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}</taco.plugin.version>
+    <taco.plugin.vendor>Apache</taco.plugin.vendor>
+    <taco.plugin.site>https://asterixdb.apache.org</taco.plugin.site>
+    <taco.plugin.dialect>AsterixDB</taco.plugin.dialect>
+    <taco.plugin.port.default>19002</taco.plugin.port.default>
+    <taco.plugin.database.label>Dataverse</taco.plugin.database.label>
+    <taco.plugin.database.default>Default</taco.plugin.database.default>
+    <taco.plugin.table.label>Dataset</taco.plugin.table.label>
+    <taco.plugin.jdbc.scheme>jdbc:asterixdb://</taco.plugin.jdbc.scheme>
+    <taco.plugin.auth.none><![CDATA[<option value="auth-none" label="No Authentication"/>]]></taco.plugin.auth.none>
+  </properties>
+
+  <build>
+    <resources>
+        <resource>
+          <directory>${taco.sourceDirectory}</directory>
+        </resource>
+    </resources>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>parse-version</id>
+            <goals>
+              <goal>parse-version</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>taco-generate-sources</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${build.taco.gensrc.directory}</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${taco.sourceDirectory}</directory>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <classesDirectory>${build.taco.gensrc.directory}/plugins/${taco.plugin.class}</classesDirectory>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- create .taco file -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <outputFile>${project.build.directory}/${taco.plugin.class}.taco</outputFile>
+              <artifactSet>
+                <includes>
+                  <include>org.apache.asterix:asterix-jdbc-taco</include>
+                </includes>
+              </artifactSet>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>venv-install</id>
+            <phase>${build.taco.init.stage}</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <!--suppress UnresolvedMavenProperty -->
+              <executable>${python.path}</executable>
+              <workingDirectory>${project.build.directory}</workingDirectory>
+              <arguments>
+                <argument>-m</argument>
+                <argument>venv</argument>
+                <argument>${build.venv.directory}</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>taco-packager-install</id>
+            <phase>${build.taco.init.stage}</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>${build.venv.pyhton.path}</executable>
+              <workingDirectory>${taco.sdk.path}/connector-packager</workingDirectory>
+              <arguments>
+                <argument>setup.py</argument>
+                <argument>install</argument>
+              </arguments>
+              <environmentVariables>
+                <VIRTUALENV>${build.venv.directory}</VIRTUALENV>
+                <PATH>${build.venv.directory}${file.separator}bin:${path.separator}${env.PATH}</PATH>
+              </environmentVariables>
+            </configuration>
+          </execution>
+          <execution>
+            <id>taco-validate</id>
+            <phase>${build.taco.validate.stage}</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>${build.venv.pyhton.path}</executable>
+              <workingDirectory>${taco.sdk.path}/connector-packager</workingDirectory>
+              <arguments>
+                <argument>-m</argument>
+                <argument>connector_packager.package</argument>
+                <argument>${build.taco.gensrc.directory}/plugins/asterixdb_jdbc</argument>
+                <argument>--validate-only</argument>
+                <argument>--log</argument>
+                <argument>${build.taco.log.directory}</argument>
+                <argument>--dest</argument>
+                <argument>${build.taco.directory}</argument>
+              </arguments>
+              <environmentVariables>
+                <VIRTUALENV>${build.venv.directory}</VIRTUALENV>
+                <PATH>${build.venv.directory}${file.separator}bin:${path.separator}${env.PATH}</PATH>
+              </environmentVariables>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <profile>
+      <id>taco-validate</id>
+      <activation>
+        <property>
+          <name>taco.sdk.path</name>
+        </property>
+      </activation>
+      <properties>
+        <build.taco.init.stage>initialize</build.taco.init.stage>
+        <build.taco.validate.stage>compile</build.taco.validate.stage>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-enforcer-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>enforce-taco-packager-exists</id>
+                <goals>
+                  <goal>enforce</goal>
+                </goals>
+                <configuration>
+                  <rules>
+                    <requireProperty>
+                      <property>python.path</property>
+                    </requireProperty>
+                    <requireFilesExist>
+                      <files>
+                        <!--suppress UnresolvedMavenProperty -->
+                        <file>${python.path}</file>
+                        <file>${taco.sdk.path}/connector-packager/setup.py</file>
+                      </files>
+                    </requireFilesExist>
+                  </rules>
+                  <fail>true</fail>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+</project>
