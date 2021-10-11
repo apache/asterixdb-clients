@@ -132,7 +132,7 @@ public class ADBProtocol {
         URI queryResultEndpoint =
                 createEndpointUri(host, port, getQueryResultEndpointPath(), driverContext.errorReporter);
         URI activeRequestsEndpoint =
-                createEndpointUri(host, port, getActiveRequestsEndpointPath(), driverContext.errorReporter);
+                createEndpointUri(host, port, getActiveRequestsEndpointPath(params), driverContext.errorReporter);
         PoolingHttpClientConnectionManager httpConnectionManager = new PoolingHttpClientConnectionManager();
         int maxConnections = Math.max(16, Runtime.getRuntime().availableProcessors());
         httpConnectionManager.setDefaultMaxPerRoute(maxConnections);
@@ -605,8 +605,9 @@ public class ADBProtocol {
         return QUERY_RESULT_ENDPOINT_PATH;
     }
 
-    protected String getActiveRequestsEndpointPath() {
-        return ACTIVE_REQUESTS_ENDPOINT_PATH;
+    protected String getActiveRequestsEndpointPath(Map<ADBDriverProperty, Object> params) {
+        String path = (String) ADBDriverProperty.Common.ACTIVE_REQUESTS_PATH.fetchPropertyValue(params);
+        return path != null ? path : ACTIVE_REQUESTS_ENDPOINT_PATH;
     }
 
     private static void closeQuietly(Exception mainExc, java.io.Closeable... closeableList) {

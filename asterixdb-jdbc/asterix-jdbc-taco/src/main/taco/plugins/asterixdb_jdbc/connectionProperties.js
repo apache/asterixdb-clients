@@ -20,5 +20,6 @@
     var props = {};
     props["user"] = attr[connectionHelper.attributeUsername];
     props["password"] = attr[connectionHelper.attributePassword];
+    ${taco.plugin.jdbc.properties.aux}
     return props;
 })

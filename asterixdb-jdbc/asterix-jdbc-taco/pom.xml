@@ -60,6 +60,7 @@
     <taco.plugin.database.default>Default</taco.plugin.database.default>
     <taco.plugin.table.label>Dataset</taco.plugin.table.label>
     <taco.plugin.jdbc.scheme>jdbc:asterixdb://</taco.plugin.jdbc.scheme>
+    <taco.plugin.jdbc.properties.aux> </taco.plugin.jdbc.properties.aux>
     <taco.plugin.auth.none><![CDATA[<option value="auth-none" label="No Authentication"/>]]></taco.plugin.auth.none>
   </properties>
 

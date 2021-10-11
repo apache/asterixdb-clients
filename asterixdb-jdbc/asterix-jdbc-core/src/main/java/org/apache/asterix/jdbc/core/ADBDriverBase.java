@@ -27,6 +27,7 @@ import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -182,13 +183,17 @@ public abstract class ADBDriverBase {
 
     public DriverPropertyInfo[] getPropertyInfo(String url, Properties info) {
         Collection<ADBDriverProperty> supportedProperties = getOrCreateDriverContext().supportedProperties.values();
-        DriverPropertyInfo[] result = new DriverPropertyInfo[supportedProperties.size()];
-        int i = 0;
+        List<DriverPropertyInfo> result = new ArrayList<>(supportedProperties.size());
         for (ADBDriverProperty property : supportedProperties) {
-            result[i++] = new DriverPropertyInfo(property.getPropertyName(),
-                    property.getDefaultValue() != null ? property.getDefaultValue().toString() : null);
+            if (property.isHidden()) {
+                continue;
+            }
+            Object defaultValue = property.getDefaultValue();
+            DriverPropertyInfo propInfo = new DriverPropertyInfo(property.getPropertyName(),
+                    defaultValue != null ? defaultValue.toString() : null);
+            result.add(propInfo);
         }
-        return result;
+        return result.toArray(new DriverPropertyInfo[0]);
     }
 
     public int getMajorVersion() {

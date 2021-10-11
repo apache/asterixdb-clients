@@ -31,16 +31,19 @@ public interface ADBDriverProperty {
 
     Object getDefaultValue();
 
+    boolean isHidden();
+
     enum Common implements ADBDriverProperty {
 
-        USER("user", Function.identity(), null),
-        PASSWORD("password", Function.identity(), null),
-        CONNECT_TIMEOUT("connectTimeout", Integer::parseInt, null),
-        SOCKET_TIMEOUT("socketTimeout", Integer::parseInt, null),
-        MAX_WARNINGS("maxWarnings", Integer::parseInt, 10),
-        CATALOG_DATAVERSE_MODE("catalogDataverseMode", Integer::parseInt, 1), // 1 -> CATALOG, 2 -> CATALOG_SCHEMA
-        CATALOG_INCLUDES_SCHEMALESS("catalogIncludesSchemaless", Boolean::parseBoolean, false),
-        SQL_COMPAT_MODE("sqlCompatMode", Boolean::parseBoolean, true); // Whether user statements are executed in 'SQL-compat' mode
+        USER("user", Function.identity(), null, false),
+        PASSWORD("password", Function.identity(), null, false),
+        CONNECT_TIMEOUT("connectTimeout", Integer::parseInt, null, false),
+        SOCKET_TIMEOUT("socketTimeout", Integer::parseInt, null, false),
+        MAX_WARNINGS("maxWarnings", Integer::parseInt, 10, false),
+        CATALOG_DATAVERSE_MODE("catalogDataverseMode", Integer::parseInt, 1, false), // 1 -> CATALOG, 2 -> CATALOG_SCHEMA
+        CATALOG_INCLUDES_SCHEMALESS("catalogIncludesSchemaless", Boolean::parseBoolean, false, false),
+        SQL_COMPAT_MODE("sqlCompatMode", Boolean::parseBoolean, true, false), // Whether user statements are executed in 'SQL-compat' mode
+        ACTIVE_REQUESTS_PATH("activeRequestsPath", Function.identity(), null, true);
 
         private final String propertyName;
 
@@ -48,10 +51,13 @@ public interface ADBDriverProperty {
 
         private final Object defaultValue;
 
-        Common(String propertyName, Function<String, ?> valueParser, Object defaultValue) {
+        private final boolean isHidden;
+
+        Common(String propertyName, Function<String, ?> valueParser, Object defaultValue, boolean isHidden) {
             this.propertyName = Objects.requireNonNull(propertyName);
             this.valueParser = Objects.requireNonNull(valueParser);
             this.defaultValue = defaultValue;
+            this.isHidden = isHidden;
         }
 
         @Override
@@ -59,12 +65,19 @@ public interface ADBDriverProperty {
             return propertyName;
         }
 
+        @Override
         public Function<String, ?> getValueParser() {
             return valueParser;
         }
 
+        @Override
         public Object getDefaultValue() {
             return defaultValue;
+        }
+
+        @Override
+        public boolean isHidden() {
+            return isHidden;
         }
 
         @Override
