@@ -26,30 +26,35 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Logger;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
 public class ADBDriverContext {
 
-    final Class<? extends ADBDriverBase> driverClass;
+    private final Class<? extends ADBDriverBase> driverClass;
 
-    final ADBErrorReporter errorReporter;
+    private final ADBErrorReporter errorReporter;
 
-    final ADBProductVersion driverVersion;
+    private final ADBProductVersion driverVersion;
 
-    final Map<String, ADBDriverProperty> supportedProperties;
+    private final Map<String, ADBDriverProperty> supportedProperties;
 
-    final Logger logger;
+    private final Logger logger;
 
-    final ObjectReader genericObjectReader;
+    private final ObjectReader genericObjectReader;
 
-    final ObjectWriter genericObjectWriter;
+    private final ObjectWriter genericObjectWriter;
 
-    final ObjectReader admFormatObjectReader;
+    private final ObjectReader admFormatObjectReader;
 
-    final ObjectWriter admFormatObjectWriter;
+    private final ObjectWriter admFormatObjectWriter;
 
     ADBDriverContext(Class<? extends ADBDriverBase> driverClass,
             Collection<ADBDriverProperty> driverSupportedProperties, ADBErrorReporter errorReporter) {
@@ -59,7 +64,7 @@ public class ADBDriverContext {
         this.driverVersion = ADBProductVersion.parseDriverVersion(driverClass.getPackage());
         this.supportedProperties = createPropertyIndexByName(driverSupportedProperties);
 
-        ObjectMapper genericObjectMapper = ADBProtocol.createObjectMapper();
+        ObjectMapper genericObjectMapper = createGenericObjectMapper();
         this.genericObjectReader = genericObjectMapper.reader();
         this.genericObjectWriter = genericObjectMapper.writer();
         ObjectMapper admFormatObjectMapper = createADMFormatObjectMapper();
@@ -67,11 +72,23 @@ public class ADBDriverContext {
         this.admFormatObjectWriter = admFormatObjectMapper.writer();
     }
 
+    protected ObjectMapper createGenericObjectMapper() {
+        ObjectMapper om = new ObjectMapper();
+        om.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.NON_PRIVATE);
+        // serialization
+        om.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        // deserialization
+        om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        om.configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL, true);
+        om.enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS);
+        return om;
+    }
+
     protected ObjectMapper createADMFormatObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
         SimpleModule serdeModule = new SimpleModule(driverClass.getName());
-        ADBStatement.configureSerialization(serdeModule);
-        ADBRowStore.configureDeserialization(mapper, serdeModule);
+        ADBStatement.configureADMFormatSerialization(serdeModule);
+        ADBRowStore.configureADMFormatDeserialization(mapper, serdeModule);
         mapper.registerModule(serdeModule);
         return mapper;
     }
@@ -82,5 +99,37 @@ public class ADBDriverContext {
             m.put(p.getPropertyName(), p);
         }
         return Collections.unmodifiableMap(m);
+    }
+
+    public ADBErrorReporter getErrorReporter() {
+        return errorReporter;
+    }
+
+    public Logger getLogger() {
+        return logger;
+    }
+
+    public ObjectReader getGenericObjectReader() {
+        return genericObjectReader;
+    }
+
+    public ObjectWriter getGenericObjectWriter() {
+        return genericObjectWriter;
+    }
+
+    public ObjectReader getAdmFormatObjectReader() {
+        return admFormatObjectReader;
+    }
+
+    public ObjectWriter getAdmFormatObjectWriter() {
+        return admFormatObjectWriter;
+    }
+
+    public ADBProductVersion getDriverVersion() {
+        return driverVersion;
+    }
+
+    public Map<String, ADBDriverProperty> getSupportedProperties() {
+        return supportedProperties;
     }
 }

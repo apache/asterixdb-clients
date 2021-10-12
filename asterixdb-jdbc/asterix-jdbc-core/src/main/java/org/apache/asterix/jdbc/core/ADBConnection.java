@@ -48,7 +48,7 @@ import java.util.logging.Logger;
 
 public class ADBConnection extends ADBWrapperSupport implements Connection {
 
-    final ADBProtocol protocol;
+    final ADBProtocolBase protocol;
     final String url;
     final String databaseVersion;
     final ADBDriverProperty.CatalogDataverseMode catalogDataverseMode;
@@ -63,7 +63,7 @@ public class ADBConnection extends ADBWrapperSupport implements Connection {
 
     // Lifecycle
 
-    protected ADBConnection(ADBProtocol protocol, String url, String databaseVersion, String dataverseCanonicalName,
+    protected ADBConnection(ADBProtocolBase protocol, String url, String databaseVersion, String dataverseCanonicalName,
             Map<ADBDriverProperty, Object> properties, SQLWarning connectWarning) throws SQLException {
         this.url = Objects.requireNonNull(url);
         this.protocol = Objects.requireNonNull(protocol);
@@ -72,22 +72,22 @@ public class ADBConnection extends ADBWrapperSupport implements Connection {
         this.warning = connectWarning;
         this.closed = new AtomicBoolean(false);
         this.sqlCompatMode = (Boolean) ADBDriverProperty.Common.SQL_COMPAT_MODE.fetchPropertyValue(properties);
-        this.catalogDataverseMode = getCatalogDataverseMode(protocol, properties);
+        this.catalogDataverseMode = getCatalogDataverseMode(properties, protocol.getErrorReporter());
         this.catalogIncludesSchemaless =
                 (Boolean) ADBDriverProperty.Common.CATALOG_INCLUDES_SCHEMALESS.fetchPropertyValue(properties);
         initCatalogSchema(protocol, dataverseCanonicalName);
     }
 
-    private void initCatalogSchema(ADBProtocol protocol, String dataverseCanonicalName) throws SQLException {
+    private void initCatalogSchema(ADBProtocolBase protocol, String dataverseCanonicalName) throws SQLException {
         switch (catalogDataverseMode) {
             case CATALOG:
                 catalog = dataverseCanonicalName == null || dataverseCanonicalName.isEmpty()
-                        ? ADBProtocol.DEFAULT_DATAVERSE : dataverseCanonicalName;
+                        ? protocol.getDefaultDataverse() : dataverseCanonicalName;
                 // schema = null
                 break;
             case CATALOG_SCHEMA:
                 if (dataverseCanonicalName == null || dataverseCanonicalName.isEmpty()) {
-                    catalog = ADBProtocol.DEFAULT_DATAVERSE;
+                    catalog = protocol.getDefaultDataverse();
                     // schema = null
                 } else {
                     String[] parts = dataverseCanonicalName.split("/");
@@ -377,13 +377,13 @@ public class ADBConnection extends ADBWrapperSupport implements Connection {
         }
     }
 
-    private static ADBDriverProperty.CatalogDataverseMode getCatalogDataverseMode(ADBProtocol protocol,
-            Map<ADBDriverProperty, Object> properties) throws SQLException {
+    private static ADBDriverProperty.CatalogDataverseMode getCatalogDataverseMode(
+            Map<ADBDriverProperty, Object> properties, ADBErrorReporter errorReporter) throws SQLException {
         int mode = ((Number) ADBDriverProperty.Common.CATALOG_DATAVERSE_MODE.fetchPropertyValue(properties)).intValue();
         try {
             return ADBDriverProperty.CatalogDataverseMode.valueOf(mode);
         } catch (IllegalArgumentException e) {
-            throw protocol.getErrorReporter().errorInConnection(String.valueOf(mode)); //TODO:FIXME
+            throw errorReporter.errorInConnection(String.valueOf(mode)); //TODO:FIXME
         }
     }
 
@@ -579,11 +579,11 @@ public class ADBConnection extends ADBWrapperSupport implements Connection {
 
     @Override
     protected ADBErrorReporter getErrorReporter() {
-        return protocol.driverContext.errorReporter;
+        return protocol.getErrorReporter();
     }
 
     protected Logger getLogger() {
-        return protocol.driverContext.logger;
+        return protocol.getLogger();
     }
 
     // Miscellaneous unsupported features (error is raised)

@@ -66,6 +66,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 
 final class ADBRowStore {
 
+    static final char TEXT_DELIMITER = ':';
     private static final String ROW_STORE_ATTR_NAME = ADBRowStore.class.getSimpleName();
 
     private static final int FLOAT_NAN_BITS = Float.floatToIntBits(Float.NaN);
@@ -154,7 +155,7 @@ final class ADBRowStore {
                 objectStore[columnIndex] = new String(textChars, nonTaggedOffset, nonTaggedLength);
                 break;
             case DURATION:
-                int delimiterOffset = indexOf(ADBProtocol.TEXT_DELIMITER, textChars, nonTaggedOffset, nonTaggedEnd);
+                int delimiterOffset = indexOf(TEXT_DELIMITER, textChars, nonTaggedOffset, nonTaggedEnd);
                 if (delimiterOffset < 0 || delimiterOffset == nonTaggedEnd - 1) {
                     throw getErrorReporter().errorInProtocol();
                 }
@@ -1035,7 +1036,7 @@ final class ADBRowStore {
             jsonGenBuffer = new StringWriter();
             try {
                 //TODO:FIXME:need to configure generator to print java.sql.Date/Times properly
-                jsonGen = resultSet.metadata.statement.connection.protocol.driverContext.genericObjectWriter
+                jsonGen = resultSet.metadata.statement.connection.protocol.getDriverContext().getGenericObjectWriter()
                         .getFactory().createGenerator(jsonGenBuffer);
             } catch (IOException e) {
                 throw getErrorReporter().errorInResultHandling(e);
@@ -1056,7 +1057,7 @@ final class ADBRowStore {
         return templateReader.withAttribute(ROW_STORE_ATTR_NAME, this);
     }
 
-    static void configureDeserialization(ObjectMapper objectMapper, SimpleModule serdeModule) {
+    static void configureADMFormatDeserialization(ObjectMapper objectMapper, SimpleModule serdeModule) {
         objectMapper.configure(DeserializationFeature.USE_LONG_FOR_INTS, true);
         serdeModule.setDeserializerModifier(createADMFormatDeserializerModifier());
     }
@@ -1146,7 +1147,7 @@ final class ADBRowStore {
             parsedLength = 0;
             return ADBDatatype.STRING.getTypeTag();
         }
-        if (textChars[textOffset] == ADBProtocol.TEXT_DELIMITER) {
+        if (textChars[textOffset] == TEXT_DELIMITER) {
             // any string
             parsedLength = 1;
             return ADBDatatype.STRING.getTypeTag();
@@ -1165,7 +1166,7 @@ final class ADBRowStore {
         if (textLength < typeTagLength + delimiterLength) {
             throw getErrorReporter().errorInProtocol();
         }
-        if (textChars[textOffset + typeTagLength] != ADBProtocol.TEXT_DELIMITER) {
+        if (textChars[textOffset + typeTagLength] != TEXT_DELIMITER) {
             throw getErrorReporter().errorInProtocol();
         }
         parsedLength = typeTagLength + delimiterLength;

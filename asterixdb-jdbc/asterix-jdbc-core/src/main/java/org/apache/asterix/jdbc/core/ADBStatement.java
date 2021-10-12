@@ -83,14 +83,14 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
 
     // common result fields
     protected int updateCount = -1;
-    protected List<ADBProtocol.QueryServiceResponse.Message> warnings;
+    protected List<ADBProtocolBase.QueryServiceResponse.Message> warnings;
 
     // executeQuery() result fields
     protected final ConcurrentLinkedQueue<ADBResultSet> resultSetsWithResources;
     protected final ConcurrentLinkedQueue<WeakReference<ADBResultSet>> resultSetsWithoutResources;
 
     // execute() result field
-    protected ADBProtocol.QueryServiceResponse executeResponse;
+    protected ADBProtocolBase.QueryServiceResponse executeResponse;
     protected ADBResultSet executeResultSet;
 
     // Lifecycle
@@ -157,12 +157,12 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
     protected ADBResultSet executeQueryImpl(String sql, List<?> args) throws SQLException {
         // note: we're not assigning executeResponse field at this method
         try {
-            ADBProtocol.SubmitStatementOptions stmtOptions = createSubmitStatementOptions();
+            ADBProtocolBase.SubmitStatementOptions stmtOptions = createSubmitStatementOptions();
             stmtOptions.forceReadOnly = true;
-            ADBProtocol.QueryServiceResponse response =
+            ADBProtocolBase.QueryServiceResponse response =
                     connection.protocol.submitStatement(sql, args, executionId, stmtOptions);
             boolean isQuery = connection.protocol.isStatementCategory(response,
-                    ADBProtocol.QueryServiceResponse.StatementCategory.QUERY);
+                    ADBProtocolBase.QueryServiceResponse.StatementCategory.QUERY);
             if (!isQuery) {
                 throw getErrorReporter().errorInvalidStatementCategory();
             }
@@ -218,11 +218,11 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
 
     protected int executeUpdateImpl(String sql, List<Object> args) throws SQLException {
         try {
-            ADBProtocol.SubmitStatementOptions stmtOptions = createSubmitStatementOptions();
-            ADBProtocol.QueryServiceResponse response =
+            ADBProtocolBase.SubmitStatementOptions stmtOptions = createSubmitStatementOptions();
+            ADBProtocolBase.QueryServiceResponse response =
                     connection.protocol.submitStatement(sql, args, executionId, stmtOptions);
             boolean isQuery = connection.protocol.isStatementCategory(response,
-                    ADBProtocol.QueryServiceResponse.StatementCategory.QUERY);
+                    ADBProtocolBase.QueryServiceResponse.StatementCategory.QUERY);
             // TODO: remove result set on the server (both query and update returning cases)
             if (isQuery) {
                 throw getErrorReporter().errorInvalidStatementCategory();
@@ -258,12 +258,12 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
 
     protected boolean executeImpl(String sql, List<Object> args) throws SQLException {
         try {
-            ADBProtocol.SubmitStatementOptions stmtOptions = createSubmitStatementOptions();
-            ADBProtocol.QueryServiceResponse response =
+            ADBProtocolBase.SubmitStatementOptions stmtOptions = createSubmitStatementOptions();
+            ADBProtocolBase.QueryServiceResponse response =
                     connection.protocol.submitStatement(sql, args, executionId, stmtOptions);
             warnings = connection.protocol.getWarningIfExists(response);
             boolean isQuery = connection.protocol.isStatementCategory(response,
-                    ADBProtocol.QueryServiceResponse.StatementCategory.QUERY);
+                    ADBProtocolBase.QueryServiceResponse.StatementCategory.QUERY);
             if (isQuery) {
                 updateCount = -1;
                 executeResponse = response;
@@ -281,7 +281,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
     @Override
     public void cancel() throws SQLException {
         checkClosed();
-        connection.protocol.cancelStatementExecution(executionId);
+        connection.protocol.cancelRunningStatement(executionId);
     }
 
     @Override
@@ -308,8 +308,8 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
         executionId = UUID.randomUUID();
     }
 
-    protected ADBProtocol.SubmitStatementOptions createSubmitStatementOptions() {
-        ADBProtocol.SubmitStatementOptions stmtOptions = connection.protocol.createSubmitStatementOptions();
+    protected ADBProtocolBase.SubmitStatementOptions createSubmitStatementOptions() {
+        ADBProtocolBase.SubmitStatementOptions stmtOptions = connection.protocol.createSubmitStatementOptions();
         stmtOptions.dataverseName = connection.getDataverseCanonicalName();
         stmtOptions.sqlCompatMode = connection.sqlCompatMode;
         stmtOptions.timeoutSeconds = queryTimeoutSeconds;
@@ -343,7 +343,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
     @Override
     public ADBResultSet getResultSet() throws SQLException {
         checkClosed();
-        ADBProtocol.QueryServiceResponse response = executeResponse;
+        ADBProtocolBase.QueryServiceResponse response = executeResponse;
         if (response == null) {
             return null;
         }
@@ -406,14 +406,15 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
 
     // ResultSet lifecycle
 
-    private ADBResultSet fetchResultSet(ADBProtocol.QueryServiceResponse execResponse) throws SQLException {
+    private ADBResultSet fetchResultSet(ADBProtocolBase.QueryServiceResponse execResponse) throws SQLException {
         List<ADBColumn> columns = connection.protocol.getColumns(execResponse);
         if (getLogger().isLoggable(Level.FINER)) {
             getLogger().log(Level.FINE, "result schema " + columns);
         }
         if (connection.protocol.isExplainOnly(execResponse)) {
             AbstractValueSerializer stringSer = getADMFormatSerializer(String.class);
-            ArrayNode explainResult = connection.protocol.fetchExplainOnlyResult(execResponse, stringSer);
+            ArrayNode explainResult =
+                    connection.protocol.fetchExplainOnlyResult(execResponse, stringSer::serializeToString);
             return createSystemResultSet(columns, explainResult);
         } else {
             JsonParser rowParser = connection.protocol.fetchResult(execResponse);
@@ -422,12 +423,12 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
     }
 
     protected ADBResultSet createSystemResultSet(List<ADBColumn> columns, ArrayNode values) {
-        JsonParser rowParser = connection.protocol.createJsonParser(values);
+        JsonParser rowParser = connection.protocol.getDriverContext().getGenericObjectReader().treeAsTokens(values);
         return createResultSetImpl(columns, rowParser, false, 0);
     }
 
     protected ADBResultSet createEmptyResultSet() {
-        ArrayNode empty = (ArrayNode) connection.protocol.driverContext.genericObjectReader.createArrayNode();
+        ArrayNode empty = (ArrayNode) connection.protocol.getDriverContext().getGenericObjectReader().createArrayNode();
         return createSystemResultSet(Collections.emptyList(), empty);
     }
 
@@ -642,7 +643,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
 
     // Serialization
 
-    static void configureSerialization(SimpleModule serdeModule) {
+    static void configureADMFormatSerialization(SimpleModule serdeModule) {
         serdeModule.setSerializerModifier(createADMFormatSerializerModifier());
     }
 
@@ -725,7 +726,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
 
             @Override
             protected String serializeToString(Object value) {
-                return ADBProtocol.TEXT_DELIMITER + String.valueOf(value);
+                return ADBRowStore.TEXT_DELIMITER + String.valueOf(value);
             }
         };
     }
@@ -908,7 +909,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
         protected final String serializeToString(Object value) {
             StringBuilder textBuilder = new StringBuilder(64); // TODO:optimize?
             printByteAsHex(adbType.getTypeTag(), textBuilder);
-            textBuilder.append(ADBProtocol.TEXT_DELIMITER);
+            textBuilder.append(ADBRowStore.TEXT_DELIMITER);
             serializeNonTaggedValue(value, textBuilder);
             return textBuilder.toString();
         }

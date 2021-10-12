@@ -91,9 +91,10 @@ public abstract class ADBDriverBase {
 
     private static void parseConnectionProperty(String name, String textValue, ADBDriverContext driverContext,
             Map<ADBDriverProperty, Object> outProperties, SQLWarning outWarning) throws SQLException {
-        ADBDriverProperty property = driverContext.supportedProperties.get(name);
+        ADBDriverProperty property = driverContext.getSupportedProperties().get(name);
         if (property == null) {
-            outWarning.setNextWarning(new SQLWarning(driverContext.errorReporter.warningParameterNotSupported(name)));
+            outWarning.setNextWarning(
+                    new SQLWarning(driverContext.getErrorReporter().warningParameterNotSupported(name)));
             return;
         }
         if (textValue == null || textValue.isEmpty()) {
@@ -103,7 +104,7 @@ public abstract class ADBDriverBase {
         try {
             value = Objects.requireNonNull(property.getValueParser().apply(textValue));
         } catch (RuntimeException e) {
-            throw driverContext.errorReporter.errorParameterValueNotSupported(name);
+            throw driverContext.getErrorReporter().errorParameterValueNotSupported(name);
         }
         outProperties.put(property, value);
     }
@@ -167,7 +168,7 @@ public abstract class ADBDriverBase {
         String dataverseCanonicalName =
                 path != null && path.length() > 1 && path.startsWith("/") ? path.substring(1) : null;
 
-        ADBProtocol protocol = createProtocol(host, port, properties, driverContext);
+        ADBProtocolBase protocol = createProtocol(host, port, properties, driverContext);
         try {
             String databaseVersion = protocol.connect();
             return createConnection(protocol, url, databaseVersion, dataverseCanonicalName, properties, warning);
@@ -182,7 +183,8 @@ public abstract class ADBDriverBase {
     }
 
     public DriverPropertyInfo[] getPropertyInfo(String url, Properties info) {
-        Collection<ADBDriverProperty> supportedProperties = getOrCreateDriverContext().supportedProperties.values();
+        Collection<ADBDriverProperty> supportedProperties =
+                getOrCreateDriverContext().getSupportedProperties().values();
         List<DriverPropertyInfo> result = new ArrayList<>(supportedProperties.size());
         for (ADBDriverProperty property : supportedProperties) {
             if (property.isHidden()) {
@@ -197,11 +199,11 @@ public abstract class ADBDriverBase {
     }
 
     public int getMajorVersion() {
-        return getOrCreateDriverContext().driverVersion.majorVersion;
+        return getOrCreateDriverContext().getDriverVersion().majorVersion;
     }
 
     public int getMinorVersion() {
-        return getOrCreateDriverContext().driverVersion.minorVersion;
+        return getOrCreateDriverContext().getDriverVersion().minorVersion;
     }
 
     public boolean jdbcCompliant() {
@@ -237,12 +239,10 @@ public abstract class ADBDriverBase {
         return new ADBErrorReporter();
     }
 
-    protected ADBProtocol createProtocol(String host, int port, Map<ADBDriverProperty, Object> properties,
-            ADBDriverContext driverContext) throws SQLException {
-        return new ADBProtocol(host, port, properties, driverContext);
-    }
+    protected abstract ADBProtocolBase createProtocol(String host, int port, Map<ADBDriverProperty, Object> properties,
+            ADBDriverContext driverContext) throws SQLException;
 
-    protected ADBConnection createConnection(ADBProtocol protocol, String url, String databaseVersion,
+    protected ADBConnection createConnection(ADBProtocolBase protocol, String url, String databaseVersion,
             String dataverseCanonicalName, Map<ADBDriverProperty, Object> properties, SQLWarning connectWarning)
             throws SQLException {
         return new ADBConnection(protocol, url, databaseVersion, dataverseCanonicalName, properties, connectWarning);

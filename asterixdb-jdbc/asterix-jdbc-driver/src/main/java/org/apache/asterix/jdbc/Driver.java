@@ -19,9 +19,16 @@
 
 package org.apache.asterix.jdbc;
 
-import org.apache.asterix.jdbc.core.ADBDriverBase;
+import java.sql.SQLException;
+import java.util.Map;
 
-public final class Driver extends ADBDriverBase implements java.sql.Driver {
+import org.apache.asterix.jdbc.core.ADBDriverBase;
+import org.apache.asterix.jdbc.core.ADBDriverContext;
+import org.apache.asterix.jdbc.core.ADBDriverProperty;
+import org.apache.asterix.jdbc.core.ADBProtocol;
+import org.apache.asterix.jdbc.core.ADBProtocolBase;
+
+public class Driver extends ADBDriverBase implements java.sql.Driver {
 
     private static final String DRIVER_SCHEME = "asterixdb:";
 
@@ -34,5 +41,11 @@ public final class Driver extends ADBDriverBase implements java.sql.Driver {
 
     public Driver() {
         super(DRIVER_SCHEME, DEFAULT_API_PORT);
+    }
+
+    @Override
+    protected ADBProtocolBase createProtocol(String host, int port, Map<ADBDriverProperty, Object> properties,
+            ADBDriverContext driverContext) throws SQLException {
+        return new ADBProtocol(host, port, properties, driverContext);
     }
 }

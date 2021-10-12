@@ -51,13 +51,14 @@ final class ADBPreparedStatement extends ADBStatement implements PreparedStateme
 
     ADBPreparedStatement(ADBConnection connection, String sql) throws SQLException {
         super(connection);
-        ADBProtocol.SubmitStatementOptions stmtOptions = createSubmitStatementOptions();
+        ADBProtocolBase.SubmitStatementOptions stmtOptions = createSubmitStatementOptions();
         stmtOptions.compileOnly = true;
         stmtOptions.timeoutSeconds = 0; /* TODO:timeout */
-        ADBProtocol.QueryServiceResponse response = connection.protocol.submitStatement(sql, null, null, stmtOptions);
+        ADBProtocolBase.QueryServiceResponse response =
+                connection.protocol.submitStatement(sql, null, null, stmtOptions);
         int parameterCount = connection.protocol.getStatementParameterCount(response);
         boolean isQuery = connection.protocol.isStatementCategory(response,
-                ADBProtocol.QueryServiceResponse.StatementCategory.QUERY);
+                ADBProtocolBase.QueryServiceResponse.StatementCategory.QUERY);
         List<ADBColumn> columns = isQuery ? connection.protocol.getColumns(response) : Collections.emptyList();
         this.sql = sql;
         this.args = Arrays.asList(new Object[parameterCount]);

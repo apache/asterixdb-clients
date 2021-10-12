@@ -364,9 +364,9 @@ final class ADBResultSet extends ADBWrapperSupport implements java.sql.ResultSet
 
     private ObjectReader getComplexColumnReader() {
         if (complexColumnReader == null) {
-            ADBDriverContext ctx = metadata.statement.connection.protocol.driverContext;
+            ADBDriverContext ctx = metadata.statement.connection.protocol.getDriverContext();
             ADBRowStore tmpStore = createRowStore(1);
-            complexColumnReader = tmpStore.createComplexColumnObjectReader(ctx.admFormatObjectReader);
+            complexColumnReader = tmpStore.createComplexColumnObjectReader(ctx.getAdmFormatObjectReader());
         }
         return complexColumnReader;
     }

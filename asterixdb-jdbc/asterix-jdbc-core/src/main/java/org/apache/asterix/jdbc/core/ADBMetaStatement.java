@@ -476,7 +476,8 @@ public class ADBMetaStatement extends ADBStatement {
         List<ADBColumn> columns = Collections.singletonList(new ADBColumn("TABLE_TYPE", ADBDatatype.STRING, false));
 
         AbstractValueSerializer stringSer = getADMFormatSerializer(String.class);
-        ArrayNode result = (ArrayNode) connection.protocol.driverContext.genericObjectReader.createArrayNode();
+        ArrayNode result =
+                (ArrayNode) connection.protocol.getDriverContext().getGenericObjectReader().createArrayNode();
         for (String tableType : tableTypes) {
             result.addObject().put("TABLE_TYPE", stringSer.serializeToString(tableType));
         }
@@ -511,7 +512,8 @@ public class ADBMetaStatement extends ADBStatement {
         columns.add(new ADBColumn("SQL_DATETIME_SUB", ADBDatatype.INTEGER, true));
         columns.add(new ADBColumn("NUM_PREC_RADIX", ADBDatatype.INTEGER, true));
 
-        ArrayNode result = (ArrayNode) connection.protocol.driverContext.genericObjectReader.createArrayNode();
+        ArrayNode result =
+                (ArrayNode) connection.protocol.getDriverContext().getGenericObjectReader().createArrayNode();
         populateTypeInfo(result.addObject(), ADBDatatype.BOOLEAN, 1, null, null, null, null, null, null, int16Ser,
                 int32Ser, stringSer);
         populateTypeInfo(result.addObject(), ADBDatatype.TINYINT, 3, 10, 0, 0, false, null, null, int16Ser, int32Ser,
@@ -586,8 +588,8 @@ public class ADBMetaStatement extends ADBStatement {
     }
 
     @Override
-    protected ADBProtocol.SubmitStatementOptions createSubmitStatementOptions() {
-        ADBProtocol.SubmitStatementOptions options = super.createSubmitStatementOptions();
+    protected ADBProtocolBase.SubmitStatementOptions createSubmitStatementOptions() {
+        ADBProtocolBase.SubmitStatementOptions options = super.createSubmitStatementOptions();
         // Metadata queries are always executed in SQL++ mode
         options.sqlCompatMode = false;
         return options;

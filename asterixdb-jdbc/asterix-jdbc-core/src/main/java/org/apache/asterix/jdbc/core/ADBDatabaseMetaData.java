@@ -48,22 +48,22 @@ final class ADBDatabaseMetaData extends ADBWrapperSupport implements DatabaseMet
 
     @Override
     public String getDriverName() {
-        return metaStatement.connection.protocol.driverContext.driverVersion.productName;
+        return metaStatement.connection.protocol.getDriverContext().getDriverVersion().productName;
     }
 
     @Override
     public String getDriverVersion() {
-        return metaStatement.connection.protocol.driverContext.driverVersion.productVersion;
+        return metaStatement.connection.protocol.getDriverContext().getDriverVersion().productVersion;
     }
 
     @Override
     public int getDriverMajorVersion() {
-        return metaStatement.connection.protocol.driverContext.driverVersion.majorVersion;
+        return metaStatement.connection.protocol.getDriverContext().getDriverVersion().majorVersion;
     }
 
     @Override
     public int getDriverMinorVersion() {
-        return metaStatement.connection.protocol.driverContext.driverVersion.minorVersion;
+        return metaStatement.connection.protocol.getDriverContext().getDriverVersion().minorVersion;
     }
 
     @Override
@@ -895,7 +895,7 @@ final class ADBDatabaseMetaData extends ADBWrapperSupport implements DatabaseMet
 
     @Override
     public String getUserName() {
-        return metaStatement.connection.protocol.user;
+        return metaStatement.connection.protocol.getUser();
     }
 
     @Override
