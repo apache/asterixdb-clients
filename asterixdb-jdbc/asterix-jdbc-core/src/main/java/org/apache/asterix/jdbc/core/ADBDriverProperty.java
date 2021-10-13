@@ -43,7 +43,8 @@ public interface ADBDriverProperty {
         CATALOG_DATAVERSE_MODE("catalogDataverseMode", Integer::parseInt, 1, false), // 1 -> CATALOG, 2 -> CATALOG_SCHEMA
         CATALOG_INCLUDES_SCHEMALESS("catalogIncludesSchemaless", Boolean::parseBoolean, false, false),
         SQL_COMPAT_MODE("sqlCompatMode", Boolean::parseBoolean, true, false), // Whether user statements are executed in 'SQL-compat' mode
-        ACTIVE_REQUESTS_PATH("activeRequestsPath", Function.identity(), null, true);
+        ACTIVE_REQUESTS_PATH("activeRequestsPath", Function.identity(), null, true),
+        SSL("ssl", Boolean::parseBoolean, false, false);
 
         private final String propertyName;
 

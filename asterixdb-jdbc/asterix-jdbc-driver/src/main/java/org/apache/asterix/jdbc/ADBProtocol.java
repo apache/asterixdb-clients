@@ -103,12 +103,13 @@ final class ADBProtocol extends ADBProtocolBase {
     public ADBProtocol(String host, int port, Map<ADBDriverProperty, Object> params, ADBDriverContext driverContext)
             throws SQLException {
         super(driverContext, params);
-        URI queryEndpoint =
-                createEndpointUri(host, port, QUERY_SERVICE_ENDPOINT_PATH, driverContext.getErrorReporter());
+        boolean sslEnabled = (Boolean) ADBDriverProperty.Common.SSL.fetchPropertyValue(params);
+        URI queryEndpoint = createEndpointUri(sslEnabled, host, port, QUERY_SERVICE_ENDPOINT_PATH,
+                driverContext.getErrorReporter());
         URI queryResultEndpoint =
-                createEndpointUri(host, port, QUERY_RESULT_ENDPOINT_PATH, driverContext.getErrorReporter());
-        URI activeRequestsEndpoint =
-                createEndpointUri(host, port, getActiveRequestsEndpointPath(params), driverContext.getErrorReporter());
+                createEndpointUri(sslEnabled, host, port, QUERY_RESULT_ENDPOINT_PATH, driverContext.getErrorReporter());
+        URI activeRequestsEndpoint = createEndpointUri(sslEnabled, host, port, getActiveRequestsEndpointPath(params),
+                driverContext.getErrorReporter());
 
         PoolingHttpClientConnectionManager httpConnectionManager = new PoolingHttpClientConnectionManager();
         int maxConnections = Math.max(16, Runtime.getRuntime().availableProcessors());
@@ -437,10 +438,10 @@ final class ADBProtocol extends ADBProtocolBase {
         }
     }
 
-    private static URI createEndpointUri(String host, int port, String path, ADBErrorReporter errorReporter)
-            throws SQLException {
+    private static URI createEndpointUri(boolean sslEnabled, String host, int port, String path,
+            ADBErrorReporter errorReporter) throws SQLException {
         try {
-            return new URI("http", null, host, port, path, null, null);
+            return new URI(sslEnabled ? "https" : "http", null, host, port, path, null, null);
         } catch (URISyntaxException e) {
             throw errorReporter.errorParameterValueNotSupported("endpoint " + host + ":" + port);
         }

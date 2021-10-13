@@ -20,6 +20,9 @@
     var props = {};
     props["user"] = attr[connectionHelper.attributeUsername];
     props["password"] = attr[connectionHelper.attributePassword];
+    if (attr[connectionHelper.attributeSSLMode] == "require") {
+        props["ssl"] = "true";
+    }
     ${taco.plugin.jdbc.properties.aux}
     return props;
 })
