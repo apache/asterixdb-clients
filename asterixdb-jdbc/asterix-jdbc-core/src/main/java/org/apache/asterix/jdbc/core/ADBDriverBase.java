@@ -206,6 +206,10 @@ public abstract class ADBDriverBase {
         return getParentLogger(getClass());
     }
 
+    protected Logger getLogger() {
+        return Logger.getLogger(getClass().getName());
+    }
+
     private ADBDriverContext getOrCreateDriverContext() {
         ADBDriverContext ctx = context;
         if (ctx == null) {
@@ -220,7 +224,12 @@ public abstract class ADBDriverBase {
     }
 
     protected ADBDriverContext createDriverContext() {
-        return new ADBDriverContext(getClass(), getDriverSupportedProperties(), createErrorReporter());
+        return new ADBDriverContext(getDriverVersion(), getDriverSupportedProperties(), createErrorReporter(),
+                getLogger());
+    }
+
+    protected ADBProductVersion getDriverVersion() {
+        return ADBProductVersion.parseDriverVersion(getClass().getPackage());
     }
 
     protected Collection<ADBDriverProperty> getDriverSupportedProperties() {

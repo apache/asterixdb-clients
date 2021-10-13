@@ -38,13 +38,11 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 
 public class ADBDriverContext {
 
-    private final Class<? extends ADBDriverBase> driverClass;
-
-    private final ADBErrorReporter errorReporter;
-
     private final ADBProductVersion driverVersion;
 
     private final Map<String, ADBDriverProperty> supportedProperties;
+
+    private final ADBErrorReporter errorReporter;
 
     private final Logger logger;
 
@@ -56,12 +54,11 @@ public class ADBDriverContext {
 
     private final ObjectWriter admFormatObjectWriter;
 
-    ADBDriverContext(Class<? extends ADBDriverBase> driverClass,
-            Collection<ADBDriverProperty> driverSupportedProperties, ADBErrorReporter errorReporter) {
-        this.driverClass = Objects.requireNonNull(driverClass);
+    public ADBDriverContext(ADBProductVersion driverVersion, Collection<ADBDriverProperty> driverSupportedProperties,
+            ADBErrorReporter errorReporter, Logger logger) {
+        this.driverVersion = Objects.requireNonNull(driverVersion);
         this.errorReporter = Objects.requireNonNull(errorReporter);
-        this.logger = Logger.getLogger(driverClass.getName());
-        this.driverVersion = ADBProductVersion.parseDriverVersion(driverClass.getPackage());
+        this.logger = Objects.requireNonNull(logger);
         this.supportedProperties = createPropertyIndexByName(driverSupportedProperties);
 
         ObjectMapper genericObjectMapper = createGenericObjectMapper();
@@ -86,7 +83,7 @@ public class ADBDriverContext {
 
     protected ObjectMapper createADMFormatObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
-        SimpleModule serdeModule = new SimpleModule(driverClass.getName());
+        SimpleModule serdeModule = new SimpleModule(getClass().getName());
         ADBStatement.configureADMFormatSerialization(serdeModule);
         ADBRowStore.configureADMFormatDeserialization(mapper, serdeModule);
         mapper.registerModule(serdeModule);
