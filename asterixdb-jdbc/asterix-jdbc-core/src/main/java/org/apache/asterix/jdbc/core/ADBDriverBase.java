@@ -21,7 +21,6 @@ package org.apache.asterix.jdbc.core;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
@@ -39,9 +38,6 @@ import java.util.Properties;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.apache.http.NameValuePair;
-import org.apache.http.client.utils.URLEncodedUtils;
 
 public abstract class ADBDriverBase {
 
@@ -72,18 +68,12 @@ public abstract class ADBDriverBase {
         }
     }
 
-    private static void parseConnectionProperties(List<NameValuePair> inProps1, Properties inProps2,
-            ADBDriverContext driverContext, Map<ADBDriverProperty, Object> outProperties, SQLWarning outWarning)
-            throws SQLException {
-        for (NameValuePair pair : inProps1) {
-            String name = pair.getName();
-            String value = pair.getValue();
-            parseConnectionProperty(name, value, driverContext, outProperties, outWarning);
-        }
-        if (inProps2 != null) {
-            for (Enumeration<?> en = inProps2.propertyNames(); en.hasMoreElements();) {
+    private static void parseConnectionProperties(Properties inProps, ADBDriverContext driverContext,
+            Map<ADBDriverProperty, Object> outProperties, SQLWarning outWarning) throws SQLException {
+        if (inProps != null) {
+            for (Enumeration<?> en = inProps.propertyNames(); en.hasMoreElements();) {
                 String name = en.nextElement().toString();
-                String value = inProps2.getProperty(name);
+                String value = inProps.getProperty(name);
                 parseConnectionProperty(name, value, driverContext, outProperties, outWarning);
             }
         }
@@ -156,12 +146,14 @@ public abstract class ADBDriverBase {
             port = defaultApiPort;
         }
 
-        List<NameValuePair> urlParams = URLEncodedUtils.parse(subUri, StandardCharsets.UTF_8);
+        Properties uriParams = getURIParameters(subUri);
 
         ADBDriverContext driverContext = getOrCreateDriverContext();
-        Map<ADBDriverProperty, Object> properties = new HashMap<>();
         SQLWarning warning = new SQLWarning();
-        parseConnectionProperties(urlParams, info, driverContext, properties, warning);
+        Map<ADBDriverProperty, Object> properties = new HashMap<>();
+        parseConnectionProperties(uriParams, driverContext, properties, warning);
+        parseConnectionProperties(info, driverContext, properties, warning);
+
         warning = warning.getNextWarning() != null ? warning.getNextWarning() : null;
 
         String path = subUri.getPath();
@@ -247,4 +239,6 @@ public abstract class ADBDriverBase {
             throws SQLException {
         return new ADBConnection(protocol, url, databaseVersion, dataverseCanonicalName, properties, connectWarning);
     }
+
+    protected abstract Properties getURIParameters(URI uri) throws SQLException;
 }

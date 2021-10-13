@@ -17,16 +17,19 @@
  * under the License.
  */
 
-package org.apache.asterix.jdbc.core;
+package org.apache.asterix.jdbc;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.NoRouteToHostException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -34,11 +37,16 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.jdbc.core.ADBDriverContext;
+import org.apache.asterix.jdbc.core.ADBDriverProperty;
+import org.apache.asterix.jdbc.core.ADBErrorReporter;
+import org.apache.asterix.jdbc.core.ADBProtocolBase;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpStatus;
+import org.apache.http.NoHttpResponseException;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.AuthCache;
@@ -52,7 +60,9 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.config.SocketConfig;
+import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.conn.HttpClientConnectionManager;
+import org.apache.http.conn.HttpHostConnectException;
 import org.apache.http.entity.ContentProducer;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.EntityTemplate;
@@ -71,11 +81,17 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.exc.InvalidDefinitionException;
 
-public class ADBProtocol extends ADBProtocolBase {
+final class ADBProtocol extends ADBProtocolBase {
 
     private static final String QUERY_SERVICE_ENDPOINT_PATH = "/query/service";
     private static final String QUERY_RESULT_ENDPOINT_PATH = "/query/service/result";
     private static final String ACTIVE_REQUESTS_ENDPOINT_PATH = "/admin/requests/running";
+
+    static final List<Class<? extends IOException>> TIMEOUT_CONNECTION_ERRORS =
+            Collections.singletonList(ConnectTimeoutException.class);
+
+    static final List<Class<? extends IOException>> TRANSIENT_CONNECTION_ERRORS =
+            Arrays.asList(NoRouteToHostException.class, NoHttpResponseException.class, HttpHostConnectException.class);
 
     final URI queryEndpoint;
     final URI queryResultEndpoint;

@@ -19,14 +19,20 @@
 
 package org.apache.asterix.jdbc;
 
+import java.io.IOException;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.asterix.jdbc.core.ADBDriverBase;
 import org.apache.asterix.jdbc.core.ADBDriverContext;
 import org.apache.asterix.jdbc.core.ADBDriverProperty;
-import org.apache.asterix.jdbc.core.ADBProtocol;
-import org.apache.asterix.jdbc.core.ADBProtocolBase;
+import org.apache.asterix.jdbc.core.ADBErrorReporter;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URLEncodedUtils;
 
 public class Driver extends ADBDriverBase implements java.sql.Driver {
 
@@ -44,8 +50,36 @@ public class Driver extends ADBDriverBase implements java.sql.Driver {
     }
 
     @Override
-    protected ADBProtocolBase createProtocol(String host, int port, Map<ADBDriverProperty, Object> properties,
+    protected ADBProtocol createProtocol(String host, int port, Map<ADBDriverProperty, Object> properties,
             ADBDriverContext driverContext) throws SQLException {
         return new ADBProtocol(host, port, properties, driverContext);
+    }
+
+    @Override
+    protected Properties getURIParameters(URI uri) {
+        List<NameValuePair> params = URLEncodedUtils.parse(uri, StandardCharsets.UTF_8);
+        if (params.isEmpty()) {
+            return null;
+        }
+        Properties properties = new Properties();
+        for (NameValuePair pair : params) {
+            properties.setProperty(pair.getName(), pair.getValue());
+        }
+        return properties;
+    }
+
+    @Override
+    protected ADBErrorReporter createErrorReporter() {
+        return new ADBErrorReporter() {
+            @Override
+            protected boolean isTimeoutConnectionError(IOException e) {
+                return isInstanceOf(e, ADBProtocol.TIMEOUT_CONNECTION_ERRORS);
+            }
+
+            @Override
+            protected boolean isTransientConnectionError(IOException e) {
+                return isInstanceOf(e, ADBProtocol.TRANSIENT_CONNECTION_ERRORS);
+            }
+        };
     }
 }
