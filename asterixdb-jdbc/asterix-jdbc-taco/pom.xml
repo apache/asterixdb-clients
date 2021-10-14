@@ -47,12 +47,11 @@
     <taco.plugin.vendor>Apache</taco.plugin.vendor>
     <taco.plugin.site>https://asterixdb.apache.org</taco.plugin.site>
     <taco.plugin.dialect>AsterixDB</taco.plugin.dialect>
-    <taco.plugin.port.default>19002</taco.plugin.port.default>
     <taco.plugin.database.label>Dataverse</taco.plugin.database.label>
     <taco.plugin.database.default>Default</taco.plugin.database.default>
     <taco.plugin.table.label>Dataset</taco.plugin.table.label>
     <taco.plugin.jdbc.scheme>jdbc:asterixdb://</taco.plugin.jdbc.scheme>
-    <taco.plugin.jdbc.properties.aux> </taco.plugin.jdbc.properties.aux>
+    <taco.plugin.jdbc.properties.aux/>
     <taco.plugin.auth.none><![CDATA[<option value="auth-none" label="No Authentication"/>]]></taco.plugin.auth.none>
 
     <taco.sourceDirectory>${project.basedir}/src/main/taco</taco.sourceDirectory>

@@ -24,7 +24,6 @@
     </authentication-options>
     <db-name-prompt value="${taco.plugin.database.label}: " />
     <has-pre-connect-database value="true" />
-    <port-prompt value="Port: " default="${taco.plugin.port.default}" />
     <show-ssl-checkbox value="false" />
   </connection-config>
 </connection-dialog>

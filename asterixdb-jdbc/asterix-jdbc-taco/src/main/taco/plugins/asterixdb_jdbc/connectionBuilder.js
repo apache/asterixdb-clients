@@ -19,8 +19,7 @@
 (function dsbuilder(attr) {
     var urlBuilder =
         "${taco.plugin.jdbc.scheme}" +
-        attr[connectionHelper.attributeServer] + ":" +
-        attr[connectionHelper.attributePort] + "/" +
+        attr[connectionHelper.attributeServer] + "/" +
         attr[connectionHelper.attributeDatabase] + "?";
     return [urlBuilder];
 })
