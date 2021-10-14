@@ -210,7 +210,7 @@ public abstract class ADBDriverBase {
         return Logger.getLogger(getClass().getName());
     }
 
-    private ADBDriverContext getOrCreateDriverContext() {
+    protected ADBDriverContext getOrCreateDriverContext() {
         ADBDriverContext ctx = context;
         if (ctx == null) {
             synchronized (this) {
