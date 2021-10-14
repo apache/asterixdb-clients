@@ -64,7 +64,7 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.deser.BeanDeserializerModifier;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
-final class ADBRowStore {
+public final class ADBRowStore {
 
     static final char TEXT_DELIMITER = ':';
     private static final String ROW_STORE_ATTR_NAME = ADBRowStore.class.getSimpleName();
@@ -95,7 +95,7 @@ final class ADBRowStore {
     private JsonGenerator jsonGen;
     private StringWriter jsonGenBuffer;
 
-    ADBRowStore(ADBResultSet resultSet, int initialColumnCount) {
+    public ADBRowStore(ADBResultSet resultSet, int initialColumnCount) {
         this.resultSet = Objects.requireNonNull(resultSet);
         columnTypes = new ADBDatatype[initialColumnCount];
         objectStore = new Object[initialColumnCount];

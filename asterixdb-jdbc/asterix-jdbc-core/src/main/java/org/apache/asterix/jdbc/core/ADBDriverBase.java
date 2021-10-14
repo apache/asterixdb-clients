@@ -53,7 +53,7 @@ public abstract class ADBDriverBase {
 
     protected final int defaultApiPort;
 
-    protected volatile ADBDriverContext context;
+    private volatile ADBDriverContext context;
 
     public ADBDriverBase(String driverScheme, int defaultApiPort) {
         this.urlScheme = JDBC_SCHEME + Objects.requireNonNull(driverScheme);
@@ -68,7 +68,7 @@ public abstract class ADBDriverBase {
         }
     }
 
-    private static void parseConnectionProperties(Properties inProps, ADBDriverContext driverContext,
+    protected static void parseConnectionProperties(Properties inProps, ADBDriverContext driverContext,
             Map<ADBDriverProperty, Object> outProperties, SQLWarning outWarning) throws SQLException {
         if (inProps != null) {
             for (Enumeration<?> en = inProps.propertyNames(); en.hasMoreElements();) {
@@ -79,7 +79,7 @@ public abstract class ADBDriverBase {
         }
     }
 
-    private static void parseConnectionProperty(String name, String textValue, ADBDriverContext driverContext,
+    protected static void parseConnectionProperty(String name, String textValue, ADBDriverContext driverContext,
             Map<ADBDriverProperty, Object> outProperties, SQLWarning outWarning) throws SQLException {
         ADBDriverProperty property = driverContext.getSupportedProperties().get(name);
         if (property == null) {
@@ -191,11 +191,11 @@ public abstract class ADBDriverBase {
     }
 
     public int getMajorVersion() {
-        return getOrCreateDriverContext().getDriverVersion().majorVersion;
+        return getOrCreateDriverContext().getDriverVersion().getMajorVersion();
     }
 
     public int getMinorVersion() {
-        return getOrCreateDriverContext().getDriverVersion().minorVersion;
+        return getOrCreateDriverContext().getDriverVersion().getMinorVersion();
     }
 
     public boolean jdbcCompliant() {

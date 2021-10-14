@@ -23,11 +23,11 @@ import java.sql.ParameterMetaData;
 import java.sql.Types;
 import java.util.Objects;
 
-final class ADBParameterMetaData extends ADBWrapperSupport implements ParameterMetaData {
+public class ADBParameterMetaData extends ADBWrapperSupport implements ParameterMetaData {
 
-    final ADBPreparedStatement statement;
+    protected final ADBPreparedStatement statement;
 
-    final int parameterCount;
+    protected final int parameterCount;
 
     public ADBParameterMetaData(ADBPreparedStatement statement, int parameterCount) {
         this.statement = Objects.requireNonNull(statement);

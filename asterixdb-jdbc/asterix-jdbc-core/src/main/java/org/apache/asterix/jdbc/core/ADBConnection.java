@@ -48,12 +48,12 @@ import java.util.logging.Logger;
 
 public class ADBConnection extends ADBWrapperSupport implements Connection {
 
-    final ADBProtocolBase protocol;
-    final String url;
-    final String databaseVersion;
-    final ADBDriverProperty.CatalogDataverseMode catalogDataverseMode;
-    final boolean catalogIncludesSchemaless;
-    final boolean sqlCompatMode;
+    protected final ADBProtocolBase protocol;
+    protected final String url;
+    protected final String databaseVersion;
+    protected final ADBDriverProperty.CatalogDataverseMode catalogDataverseMode;
+    protected final boolean catalogIncludesSchemaless;
+    protected final boolean sqlCompatMode;
     private final AtomicBoolean closed;
     private final ConcurrentLinkedQueue<ADBStatement> statements;
     private volatile SQLWarning warning;
@@ -63,7 +63,7 @@ public class ADBConnection extends ADBWrapperSupport implements Connection {
 
     // Lifecycle
 
-    protected ADBConnection(ADBProtocolBase protocol, String url, String databaseVersion, String dataverseCanonicalName,
+    public ADBConnection(ADBProtocolBase protocol, String url, String databaseVersion, String dataverseCanonicalName,
             Map<ADBDriverProperty, Object> properties, SQLWarning connectWarning) throws SQLException {
         this.url = Objects.requireNonNull(url);
         this.protocol = Objects.requireNonNull(protocol);
@@ -78,7 +78,7 @@ public class ADBConnection extends ADBWrapperSupport implements Connection {
         initCatalogSchema(protocol, dataverseCanonicalName);
     }
 
-    private void initCatalogSchema(ADBProtocolBase protocol, String dataverseCanonicalName) throws SQLException {
+    protected void initCatalogSchema(ADBProtocolBase protocol, String dataverseCanonicalName) throws SQLException {
         switch (catalogDataverseMode) {
             case CATALOG:
                 catalog = dataverseCanonicalName == null || dataverseCanonicalName.isEmpty()
@@ -126,7 +126,7 @@ public class ADBConnection extends ADBWrapperSupport implements Connection {
         closeImpl(executor);
     }
 
-    void closeImpl(Executor executor) throws SQLException {
+    protected void closeImpl(Executor executor) throws SQLException {
         boolean wasClosed = closed.getAndSet(true);
         if (wasClosed) {
             return;
@@ -146,7 +146,7 @@ public class ADBConnection extends ADBWrapperSupport implements Connection {
         }
     }
 
-    private void closeStatementsAndProtocol() throws SQLException {
+    protected void closeStatementsAndProtocol() throws SQLException {
         SQLException err = null;
         try {
             closeRegisteredStatements();
@@ -267,7 +267,7 @@ public class ADBConnection extends ADBWrapperSupport implements Connection {
         }
     }
 
-    private ADBStatement createStatementImpl() {
+    protected ADBStatement createStatementImpl() {
         ADBStatement stmt = new ADBStatement(this);
         registerStatement(stmt);
         return stmt;
@@ -364,7 +364,7 @@ public class ADBConnection extends ADBWrapperSupport implements Connection {
         this.schema = schema;
     }
 
-    String getDataverseCanonicalName() {
+    protected String getDataverseCanonicalName() {
         switch (catalogDataverseMode) {
             case CATALOG:
                 return catalog;
@@ -377,7 +377,7 @@ public class ADBConnection extends ADBWrapperSupport implements Connection {
         }
     }
 
-    private static ADBDriverProperty.CatalogDataverseMode getCatalogDataverseMode(
+    protected static ADBDriverProperty.CatalogDataverseMode getCatalogDataverseMode(
             Map<ADBDriverProperty, Object> properties, ADBErrorReporter errorReporter) throws SQLException {
         int mode = ((Number) ADBDriverProperty.Common.CATALOG_DATAVERSE_MODE.fetchPropertyValue(properties)).intValue();
         try {

@@ -41,15 +41,15 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 
-final class ADBPreparedStatement extends ADBStatement implements PreparedStatement {
+public class ADBPreparedStatement extends ADBStatement implements PreparedStatement {
 
-    final String sql;
+    protected final String sql;
 
-    final List<Object> args;
+    protected final List<Object> args;
 
-    final List<ADBColumn> resultColumns;
+    protected final List<ADBColumn> resultColumns;
 
-    ADBPreparedStatement(ADBConnection connection, String sql) throws SQLException {
+    public ADBPreparedStatement(ADBConnection connection, String sql) throws SQLException {
         super(connection);
         ADBProtocolBase.SubmitStatementOptions stmtOptions = createSubmitStatementOptions();
         stmtOptions.compileOnly = true;

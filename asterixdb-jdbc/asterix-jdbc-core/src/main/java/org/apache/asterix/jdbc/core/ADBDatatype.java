@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-enum ADBDatatype {
+public enum ADBDatatype {
     TINYINT(1, "int8", JDBCType.TINYINT, Byte.class),
     SMALLINT(2, "int16", JDBCType.SMALLINT, Short.class),
     INTEGER(3, "int32", JDBCType.INTEGER, Integer.class),
@@ -98,19 +98,19 @@ enum ADBDatatype {
         this.javaClass = Objects.requireNonNull(javaClass);
     }
 
-    byte getTypeTag() {
+    public byte getTypeTag() {
         return typeTag;
     }
 
-    String getTypeName() {
+    public String getTypeName() {
         return typeName;
     }
 
-    JDBCType getJdbcType() {
+    public JDBCType getJdbcType() {
         return jdbcType;
     }
 
-    Class<?> getJavaClass() {
+    public Class<?> getJavaClass() {
         return javaClass;
     }
 
@@ -119,15 +119,15 @@ enum ADBDatatype {
         return getTypeName();
     }
 
-    boolean isDerived() {
+    public boolean isDerived() {
         return this == OBJECT || isList();
     }
 
-    boolean isList() {
+    public boolean isList() {
         return this == ARRAY || this == MULTISET;
     }
 
-    boolean isNullOrMissing() {
+    public boolean isNullOrMissing() {
         return this == NULL || this == MISSING;
     }
 
@@ -162,7 +162,7 @@ enum ADBDatatype {
         return maxTypeTag;
     }
 
-    static String getDerivedRecordName(ADBDatatype type) {
+    public static String getDerivedRecordName(ADBDatatype type) {
         switch (type) {
             case OBJECT:
                 return "Record";

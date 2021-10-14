@@ -22,7 +22,7 @@ package org.apache.asterix.jdbc.core;
 import java.sql.SQLException;
 import java.sql.Wrapper;
 
-abstract class ADBWrapperSupport implements Wrapper {
+public abstract class ADBWrapperSupport implements Wrapper {
 
     @Override
     public final boolean isWrapperFor(Class<?> iface) {

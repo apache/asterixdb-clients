@@ -63,7 +63,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
 
-class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
+public class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
 
     static final List<Class<?>> SET_OBJECT_ATOMIC_EXTRA =
             Arrays.asList(SqlCalendarDate.class, SqlCalendarTime.class, SqlCalendarTimestamp.class);
@@ -75,7 +75,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
     protected final ADBConnection connection;
 
     protected final AtomicBoolean closed = new AtomicBoolean(false);
-    protected volatile boolean closeOnCompletion;
+    private volatile boolean closeOnCompletion;
 
     protected int queryTimeoutSeconds;
     protected long maxRows;
@@ -95,7 +95,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
 
     // Lifecycle
 
-    ADBStatement(ADBConnection connection) {
+    public ADBStatement(ADBConnection connection) {
         this.connection = Objects.requireNonNull(connection);
         this.resultSetsWithResources = new ConcurrentLinkedQueue<>();
         this.resultSetsWithoutResources = new ConcurrentLinkedQueue<>();
@@ -107,7 +107,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
         closeImpl(true, true);
     }
 
-    void closeImpl(boolean closeResultSets, boolean notifyConnection) throws SQLException {
+    protected void closeImpl(boolean closeResultSets, boolean notifyConnection) throws SQLException {
         boolean wasClosed = closed.getAndSet(true);
         if (wasClosed) {
             return;
@@ -406,7 +406,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
 
     // ResultSet lifecycle
 
-    private ADBResultSet fetchResultSet(ADBProtocolBase.QueryServiceResponse execResponse) throws SQLException {
+    protected ADBResultSet fetchResultSet(ADBProtocolBase.QueryServiceResponse execResponse) throws SQLException {
         List<ADBColumn> columns = connection.protocol.getColumns(execResponse);
         if (getLogger().isLoggable(Level.FINER)) {
             getLogger().log(Level.FINE, "result schema " + columns);
@@ -432,7 +432,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
         return createSystemResultSet(Collections.emptyList(), empty);
     }
 
-    private ADBResultSet createResultSetImpl(List<ADBColumn> columns, JsonParser rowParser,
+    protected ADBResultSet createResultSetImpl(List<ADBColumn> columns, JsonParser rowParser,
             boolean rowParserOwnsResources, long maxRows) {
         ADBResultSetMetaData metadata = new ADBResultSetMetaData(this, columns);
         ADBResultSet rs = new ADBResultSet(metadata, rowParser, rowParserOwnsResources, maxRows);
@@ -440,7 +440,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
         return rs;
     }
 
-    private void registerResultSet(ADBResultSet rs) {
+    protected void registerResultSet(ADBResultSet rs) {
         if (rs.rowParserOwnsResources) {
             resultSetsWithResources.add(rs);
         } else {
@@ -470,7 +470,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
         }
     }
 
-    private void closeRegisteredResultSets() throws SQLException {
+    protected void closeRegisteredResultSets() throws SQLException {
         SQLException err = null;
         try {
             closedRegisteredResultSetsImpl(resultSetsWithResources, Function.identity());
@@ -490,7 +490,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
         }
     }
 
-    private <T> void closedRegisteredResultSetsImpl(Queue<T> queue, Function<T, ADBResultSet> rsAccessor)
+    protected <T> void closedRegisteredResultSetsImpl(Queue<T> queue, Function<T, ADBResultSet> rsAccessor)
             throws SQLException {
         SQLException err = null;
         T item;
@@ -643,15 +643,15 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
 
     // Serialization
 
-    static void configureADMFormatSerialization(SimpleModule serdeModule) {
+    protected static void configureADMFormatSerialization(SimpleModule serdeModule) {
         serdeModule.setSerializerModifier(createADMFormatSerializerModifier());
     }
 
-    static AbstractValueSerializer getADMFormatSerializer(Class<?> cls) {
+    protected static AbstractValueSerializer getADMFormatSerializer(Class<?> cls) {
         return SERIALIZER_MAP.get(cls);
     }
 
-    private static BeanSerializerModifier createADMFormatSerializerModifier() {
+    protected static BeanSerializerModifier createADMFormatSerializerModifier() {
         return new BeanSerializerModifier() {
             @Override
             public JsonSerializer<?> modifySerializer(SerializationConfig config, BeanDescription beanDesc,
@@ -667,7 +667,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
         };
     }
 
-    static boolean isSetObjectCompatible(Class<?> cls) {
+    protected static boolean isSetObjectCompatible(Class<?> cls) {
         if (ADBRowStore.OBJECT_ACCESSORS_ATOMIC.containsKey(cls) || SET_OBJECT_ATOMIC_EXTRA.contains(cls)) {
             return true;
         }
@@ -679,7 +679,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
         return false;
     }
 
-    private static Map<Class<?>, AbstractValueSerializer> createSerializerMap() {
+    protected static Map<Class<?>, AbstractValueSerializer> createSerializerMap() {
         Map<Class<?>, AbstractValueSerializer> serializerMap = new HashMap<>();
         registerSerializer(serializerMap, createGenericSerializer(Byte.class, ADBDatatype.TINYINT));
         registerSerializer(serializerMap, createGenericSerializer(Short.class, ADBDatatype.SMALLINT));
@@ -703,12 +703,12 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
         return serializerMap;
     }
 
-    private static void registerSerializer(Map<Class<?>, AbstractValueSerializer> map,
+    protected static void registerSerializer(Map<Class<?>, AbstractValueSerializer> map,
             AbstractValueSerializer serializer) {
         map.put(serializer.getJavaType(), serializer);
     }
 
-    private static ATaggedValueSerializer createGenericSerializer(Class<?> javaType, ADBDatatype ADBDatatype) {
+    protected static ATaggedValueSerializer createGenericSerializer(Class<?> javaType, ADBDatatype ADBDatatype) {
         return new ATaggedValueSerializer(javaType, ADBDatatype) {
             @Override
             protected void serializeNonTaggedValue(Object value, StringBuilder out) {
@@ -717,7 +717,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
         };
     }
 
-    private static AbstractValueSerializer createStringSerializer() {
+    protected static AbstractValueSerializer createStringSerializer() {
         return new AbstractValueSerializer(java.lang.String.class) {
             @Override
             public void serialize(Object value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
@@ -731,7 +731,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
         };
     }
 
-    private static ATaggedValueSerializer createFloatSerializer() {
+    protected static ATaggedValueSerializer createFloatSerializer() {
         return new ATaggedValueSerializer(Float.class, ADBDatatype.FLOAT) {
             @Override
             protected void serializeNonTaggedValue(Object value, StringBuilder out) {
@@ -741,7 +741,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
         };
     }
 
-    private static ATaggedValueSerializer createDoubleSerializer() {
+    protected static ATaggedValueSerializer createDoubleSerializer() {
         return new ATaggedValueSerializer(Double.class, ADBDatatype.DOUBLE) {
             @Override
             protected void serializeNonTaggedValue(Object value, StringBuilder out) {
@@ -751,7 +751,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
         };
     }
 
-    private static ATaggedValueSerializer createSqlDateSerializer() {
+    protected static ATaggedValueSerializer createSqlDateSerializer() {
         return new ATaggedValueSerializer(java.sql.Date.class, ADBDatatype.DATE) {
             @Override
             protected void serializeNonTaggedValue(Object value, StringBuilder out) {
@@ -763,7 +763,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
         };
     }
 
-    private static ATaggedValueSerializer createSqlDateWithCalendarSerializer() {
+    protected static ATaggedValueSerializer createSqlDateWithCalendarSerializer() {
         return new ATaggedValueSerializer(SqlCalendarDate.class, ADBDatatype.DATE) {
             @Override
             protected void serializeNonTaggedValue(Object value, StringBuilder out) {
@@ -776,7 +776,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
         };
     }
 
-    private static ATaggedValueSerializer createLocalDateSerializer() {
+    protected static ATaggedValueSerializer createLocalDateSerializer() {
         return new ATaggedValueSerializer(java.time.LocalDate.class, ADBDatatype.DATE) {
             @Override
             protected void serializeNonTaggedValue(Object value, StringBuilder out) {
@@ -786,7 +786,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
         };
     }
 
-    private static ATaggedValueSerializer createSqlTimeSerializer() {
+    protected static ATaggedValueSerializer createSqlTimeSerializer() {
         return new ATaggedValueSerializer(java.sql.Time.class, ADBDatatype.TIME) {
             @Override
             protected void serializeNonTaggedValue(Object value, StringBuilder out) {
@@ -798,7 +798,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
         };
     }
 
-    private static ATaggedValueSerializer createSqlCalendarTimeSerializer() {
+    protected static ATaggedValueSerializer createSqlCalendarTimeSerializer() {
         return new ATaggedValueSerializer(SqlCalendarTime.class, ADBDatatype.TIME) {
             @Override
             protected void serializeNonTaggedValue(Object value, StringBuilder out) {
@@ -811,7 +811,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
         };
     }
 
-    private static ATaggedValueSerializer createLocalTimeSerializer() {
+    protected static ATaggedValueSerializer createLocalTimeSerializer() {
         return new ATaggedValueSerializer(java.time.LocalTime.class, ADBDatatype.TIME) {
             @Override
             protected void serializeNonTaggedValue(Object value, StringBuilder out) {
@@ -822,7 +822,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
         };
     }
 
-    private static ATaggedValueSerializer createSqlTimestampSerializer() {
+    protected static ATaggedValueSerializer createSqlTimestampSerializer() {
         return new ATaggedValueSerializer(java.sql.Timestamp.class, ADBDatatype.DATETIME) {
             @Override
             protected void serializeNonTaggedValue(Object value, StringBuilder out) {
@@ -833,7 +833,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
         };
     }
 
-    private static ATaggedValueSerializer createSqlCalendarTimestampSerializer() {
+    protected static ATaggedValueSerializer createSqlCalendarTimestampSerializer() {
         return new ATaggedValueSerializer(SqlCalendarTimestamp.class, ADBDatatype.DATETIME) {
             @Override
             protected void serializeNonTaggedValue(Object value, StringBuilder out) {
@@ -845,7 +845,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
         };
     }
 
-    private static ATaggedValueSerializer createLocalDateTimeSerializer() {
+    protected static ATaggedValueSerializer createLocalDateTimeSerializer() {
         return new ATaggedValueSerializer(java.time.LocalDateTime.class, ADBDatatype.DATETIME) {
             @Override
             protected void serializeNonTaggedValue(Object value, StringBuilder out) {
@@ -855,7 +855,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
         };
     }
 
-    private static ATaggedValueSerializer createPeriodSerializer() {
+    protected static ATaggedValueSerializer createPeriodSerializer() {
         return new ATaggedValueSerializer(java.time.Period.class, ADBDatatype.YEARMONTHDURATION) {
             @Override
             protected void serializeNonTaggedValue(Object value, StringBuilder out) {
@@ -865,7 +865,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
         };
     }
 
-    private static ATaggedValueSerializer createDurationSerializer() {
+    protected static ATaggedValueSerializer createDurationSerializer() {
         return new ATaggedValueSerializer(java.time.Duration.class, ADBDatatype.DAYTIMEDURATION) {
             @Override
             protected void serializeNonTaggedValue(Object value, StringBuilder out) {
@@ -875,7 +875,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
         };
     }
 
-    static abstract class AbstractValueSerializer extends JsonSerializer<Object> {
+    protected static abstract class AbstractValueSerializer extends JsonSerializer<Object> {
 
         protected final Class<?> javaType;
 
@@ -890,7 +890,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
         abstract String serializeToString(Object value);
     }
 
-    private static abstract class ATaggedValueSerializer extends AbstractValueSerializer {
+    protected static abstract class ATaggedValueSerializer extends AbstractValueSerializer {
 
         protected static ZoneId TZ_UTC = ZoneId.of("UTC");
 
@@ -931,7 +931,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
         }
     }
 
-    static abstract class AbstractSqlCalendarDateTime {
+    protected static abstract class AbstractSqlCalendarDateTime {
         final TimeZone timeZone;
 
         AbstractSqlCalendarDateTime(TimeZone timeZone) {
@@ -939,7 +939,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
         }
     }
 
-    static final class SqlCalendarDate extends AbstractSqlCalendarDateTime {
+    protected static final class SqlCalendarDate extends AbstractSqlCalendarDateTime {
         final Date date;
 
         SqlCalendarDate(Date date, TimeZone timeZone) {
@@ -948,7 +948,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
         }
     }
 
-    static final class SqlCalendarTime extends AbstractSqlCalendarDateTime {
+    protected static final class SqlCalendarTime extends AbstractSqlCalendarDateTime {
         final Time time;
 
         SqlCalendarTime(Time time, TimeZone timeZone) {
@@ -957,7 +957,7 @@ class ADBStatement extends ADBWrapperSupport implements java.sql.Statement {
         }
     }
 
-    static final class SqlCalendarTimestamp extends AbstractSqlCalendarDateTime {
+    protected static final class SqlCalendarTimestamp extends AbstractSqlCalendarDateTime {
         final Timestamp timestamp;
 
         SqlCalendarTimestamp(Timestamp timestamp, TimeZone timeZone) {

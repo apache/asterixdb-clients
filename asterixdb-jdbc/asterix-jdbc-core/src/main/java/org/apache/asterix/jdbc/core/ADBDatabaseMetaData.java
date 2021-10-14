@@ -26,20 +26,20 @@ import java.sql.RowIdLifetime;
 import java.sql.SQLException;
 import java.util.Objects;
 
-final class ADBDatabaseMetaData extends ADBWrapperSupport implements DatabaseMetaData {
+public class ADBDatabaseMetaData extends ADBWrapperSupport implements DatabaseMetaData {
 
     /*
      * See org.apache.asterix.metadata.utils.MetadataConstants.METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8
      */
     private static final int METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8 = 251;
 
-    private final ADBMetaStatement metaStatement;
+    protected final ADBMetaStatement metaStatement;
 
-    private final String databaseVersionText;
+    protected final String databaseVersionText;
 
     private volatile ADBProductVersion databaseVersion;
 
-    ADBDatabaseMetaData(ADBMetaStatement metaStatement, String databaseVersionText) {
+    public ADBDatabaseMetaData(ADBMetaStatement metaStatement, String databaseVersionText) {
         this.metaStatement = Objects.requireNonNull(metaStatement);
         this.databaseVersionText = databaseVersionText;
     }
@@ -48,22 +48,22 @@ final class ADBDatabaseMetaData extends ADBWrapperSupport implements DatabaseMet
 
     @Override
     public String getDriverName() {
-        return metaStatement.connection.protocol.getDriverContext().getDriverVersion().productName;
+        return metaStatement.connection.protocol.getDriverContext().getDriverVersion().getProductName();
     }
 
     @Override
     public String getDriverVersion() {
-        return metaStatement.connection.protocol.getDriverContext().getDriverVersion().productVersion;
+        return metaStatement.connection.protocol.getDriverContext().getDriverVersion().getProductVersion();
     }
 
     @Override
     public int getDriverMajorVersion() {
-        return metaStatement.connection.protocol.getDriverContext().getDriverVersion().majorVersion;
+        return metaStatement.connection.protocol.getDriverContext().getDriverVersion().getMajorVersion();
     }
 
     @Override
     public int getDriverMinorVersion() {
-        return metaStatement.connection.protocol.getDriverContext().getDriverVersion().minorVersion;
+        return metaStatement.connection.protocol.getDriverContext().getDriverVersion().getMinorVersion();
     }
 
     @Override
@@ -80,25 +80,25 @@ final class ADBDatabaseMetaData extends ADBWrapperSupport implements DatabaseMet
 
     @Override
     public String getDatabaseProductName() {
-        return getDatabaseVersion().productName;
+        return getDatabaseVersion().getProductName();
     }
 
     @Override
     public String getDatabaseProductVersion() {
-        return getDatabaseVersion().productVersion;
+        return getDatabaseVersion().getProductVersion();
     }
 
     @Override
     public int getDatabaseMajorVersion() {
-        return getDatabaseVersion().majorVersion;
+        return getDatabaseVersion().getMajorVersion();
     }
 
     @Override
     public int getDatabaseMinorVersion() {
-        return getDatabaseVersion().minorVersion;
+        return getDatabaseVersion().getMinorVersion();
     }
 
-    private ADBProductVersion getDatabaseVersion() {
+    protected ADBProductVersion getDatabaseVersion() {
         ADBProductVersion result = databaseVersion;
         if (result == null) {
             databaseVersion = result = ADBProductVersion.parseDatabaseVersion(databaseVersionText);
@@ -136,11 +136,11 @@ final class ADBDatabaseMetaData extends ADBWrapperSupport implements DatabaseMet
     }
 
     //TODO:document
-    private boolean supportsCatalogsInStatements() {
+    protected boolean supportsCatalogsInStatements() {
         return false;
     }
 
-    private boolean supportsSchemasInStatements() {
+    protected boolean supportsSchemasInStatements() {
         return false;
     }
 
@@ -509,7 +509,6 @@ final class ADBDatabaseMetaData extends ADBWrapperSupport implements DatabaseMet
 
     @Override
     public String getTimeDateFunctions() {
-        // TODO:review
         return "current_date,current_time,current_datetime";
     }
 

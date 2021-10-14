@@ -21,7 +21,7 @@ package org.apache.asterix.jdbc.core;
 
 import java.util.Objects;
 
-final class ADBColumn {
+public class ADBColumn {
 
     private final String name;
 
@@ -29,21 +29,21 @@ final class ADBColumn {
 
     private final boolean optional;
 
-    ADBColumn(String name, ADBDatatype type, boolean optional) {
+    public ADBColumn(String name, ADBDatatype type, boolean optional) {
         this.name = Objects.requireNonNull(name);
         this.type = Objects.requireNonNull(type);
         this.optional = optional || type.isNullOrMissing() || type == ADBDatatype.ANY;
     }
 
-    String getName() {
+    public String getName() {
         return name;
     }
 
-    ADBDatatype getType() {
+    public ADBDatatype getType() {
         return type;
     }
 
-    boolean isOptional() {
+    public boolean isOptional() {
         return optional;
     }
 

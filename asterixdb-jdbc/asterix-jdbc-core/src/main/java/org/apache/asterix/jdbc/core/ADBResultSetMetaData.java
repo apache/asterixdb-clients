@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-final class ADBResultSetMetaData extends ADBWrapperSupport implements ResultSetMetaData {
+public class ADBResultSetMetaData extends ADBWrapperSupport implements ResultSetMetaData {
 
     final ADBStatement statement;
 
@@ -35,7 +35,7 @@ final class ADBResultSetMetaData extends ADBWrapperSupport implements ResultSetM
 
     private final Map<String, Integer> indexByName;
 
-    ADBResultSetMetaData(ADBStatement statement, List<ADBColumn> columns) {
+    public ADBResultSetMetaData(ADBStatement statement, List<ADBColumn> columns) {
         this.statement = Objects.requireNonNull(statement);
         this.columns = columns != null ? columns : Collections.emptyList();
         this.indexByName = createIndexByName(this.columns);

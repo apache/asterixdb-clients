@@ -40,7 +40,7 @@ public class ADBMetaStatement extends ADBStatement {
     private static final String PK_NAME_SUFFIX = "_pk";
     private static final String FK_NAME_SUFFIX = "_fk";
 
-    protected ADBMetaStatement(ADBConnection connection) {
+    public ADBMetaStatement(ADBConnection connection) {
         super(connection);
     }
 
@@ -51,7 +51,7 @@ public class ADBMetaStatement extends ADBStatement {
         //sql.append("set `compiler.min.memory.allocation` 'false';\n");
     }
 
-    ADBResultSet executeGetCatalogsQuery() throws SQLException {
+    protected ADBResultSet executeGetCatalogsQuery() throws SQLException {
         checkClosed();
 
         StringBuilder sql = new StringBuilder(256);
@@ -78,7 +78,7 @@ public class ADBMetaStatement extends ADBStatement {
         return executeQueryImpl(sql.toString(), null);
     }
 
-    ADBResultSet executeGetSchemasQuery() throws SQLException {
+    protected ADBResultSet executeGetSchemasQuery() throws SQLException {
         String catalog;
         switch (connection.catalogDataverseMode) {
             case CATALOG:
@@ -93,11 +93,12 @@ public class ADBMetaStatement extends ADBStatement {
         return executeGetSchemasQuery(catalog, null, "0");
     }
 
-    ADBResultSet executeGetSchemasQuery(String catalog, String schemaPattern) throws SQLException {
+    protected ADBResultSet executeGetSchemasQuery(String catalog, String schemaPattern) throws SQLException {
         return executeGetSchemasQuery(catalog, schemaPattern, "1");
     }
 
-    ADBResultSet executeGetSchemasQuery(String catalog, String schemaPattern, String tag) throws SQLException {
+    protected ADBResultSet executeGetSchemasQuery(String catalog, String schemaPattern, String tag)
+            throws SQLException {
         checkClosed();
 
         StringBuilder sql = new StringBuilder(512);
@@ -132,8 +133,8 @@ public class ADBMetaStatement extends ADBStatement {
         return executeQueryImpl(sql.toString(), Arrays.asList(catalog, schemaPattern));
     }
 
-    ADBResultSet executeGetTablesQuery(String catalog, String schemaPattern, String tableNamePattern, String[] types)
-            throws SQLException {
+    protected ADBResultSet executeGetTablesQuery(String catalog, String schemaPattern, String tableNamePattern,
+            String[] types) throws SQLException {
         checkClosed();
 
         String datasetTermTabular = getDatasetTerm(true);
@@ -203,7 +204,7 @@ public class ADBMetaStatement extends ADBStatement {
         return executeQueryImpl(sql.toString(), Arrays.asList(typesList, catalog, schemaPattern, tableNamePattern));
     }
 
-    ADBResultSet executeGetColumnsQuery(String catalog, String schemaPattern, String tableNamePattern,
+    protected ADBResultSet executeGetColumnsQuery(String catalog, String schemaPattern, String tableNamePattern,
             String columnNamePattern) throws SQLException {
         checkClosed();
 
@@ -293,7 +294,7 @@ public class ADBMetaStatement extends ADBStatement {
                 Arrays.asList(catalog, schemaPattern, tableNamePattern, columnNamePattern));
     }
 
-    ADBResultSet executeGetPrimaryKeysQuery(String catalog, String schema, String table) throws SQLException {
+    protected ADBResultSet executeGetPrimaryKeysQuery(String catalog, String schema, String table) throws SQLException {
         checkClosed();
 
         StringBuilder sql = new StringBuilder(1024);
@@ -353,17 +354,19 @@ public class ADBMetaStatement extends ADBStatement {
         return executeQueryImpl(sql.toString(), Arrays.asList(catalog, schema, table));
     }
 
-    ADBResultSet executeGetImportedKeysQuery(String catalog, String schema, String table) throws SQLException {
+    protected ADBResultSet executeGetImportedKeysQuery(String catalog, String schema, String table)
+            throws SQLException {
         return executeGetImportedExportedKeysQuery("JDBC-GetImportedKeys", null, null, null, catalog, schema, table,
                 false);
     }
 
-    ADBResultSet executeGetExportedKeysQuery(String catalog, String schema, String table) throws SQLException {
+    protected ADBResultSet executeGetExportedKeysQuery(String catalog, String schema, String table)
+            throws SQLException {
         return executeGetImportedExportedKeysQuery("JDBC-GetExportedKeys", catalog, schema, table, null, null, null,
                 true);
     }
 
-    ADBResultSet executeCrossReferenceQuery(String parentCatalog, String parentSchema, String parentTable,
+    protected ADBResultSet executeCrossReferenceQuery(String parentCatalog, String parentSchema, String parentTable,
             String foreignCatalog, String foreignSchema, String foreignTable) throws SQLException {
         return executeGetImportedExportedKeysQuery("JDBC-CrossReference", parentCatalog, parentSchema, parentTable,
                 foreignCatalog, foreignSchema, foreignTable, true);
@@ -462,7 +465,7 @@ public class ADBMetaStatement extends ADBStatement {
                 Arrays.asList(pkCatalog, pkSchema, pkTable, fkCatalog, fkSchema, fkTable));
     }
 
-    ADBResultSet executeGetTableTypesQuery() throws SQLException {
+    protected ADBResultSet executeGetTableTypesQuery() throws SQLException {
         checkClosed();
 
         LinkedHashSet<String> tableTypes = new LinkedHashSet<>();
@@ -485,7 +488,7 @@ public class ADBMetaStatement extends ADBStatement {
         return createSystemResultSet(columns, result);
     }
 
-    ADBResultSet executeGetTypeInfoQuery() throws SQLException {
+    protected ADBResultSet executeGetTypeInfoQuery() throws SQLException {
         checkClosed();
 
         AbstractValueSerializer int16Ser = getADMFormatSerializer(Short.class);
@@ -550,7 +553,7 @@ public class ADBMetaStatement extends ADBStatement {
         return createSystemResultSet(columns, result);
     }
 
-    private void populateTypeInfo(ObjectNode typeInfo, ADBDatatype type, int precision, Integer precisionRadix,
+    protected void populateTypeInfo(ObjectNode typeInfo, ADBDatatype type, int precision, Integer precisionRadix,
             Integer minScale, Integer maxScale, Boolean searchable, String literalPrefix, String literalSuffix,
             ADBPreparedStatement.AbstractValueSerializer int16Ser,
             ADBPreparedStatement.AbstractValueSerializer int32Ser,
@@ -577,13 +580,13 @@ public class ADBMetaStatement extends ADBStatement {
         typeInfo.put("NUM_PREC_RADIX", int32Ser.serializeToString(precisionRadix != null ? precisionRadix : 10));
     }
 
-    ADBResultSet executeEmptyResultQuery() throws SQLException {
+    protected ADBResultSet executeEmptyResultQuery() throws SQLException {
         checkClosed();
         return createEmptyResultSet();
     }
 
     @Override
-    ADBStatement getResultSetStatement(ADBResultSet rs) {
+    protected ADBStatement getResultSetStatement(ADBResultSet rs) {
         return null;
     }
 

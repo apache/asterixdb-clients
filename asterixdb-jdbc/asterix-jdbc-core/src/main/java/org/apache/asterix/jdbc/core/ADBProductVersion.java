@@ -22,29 +22,45 @@ package org.apache.asterix.jdbc.core;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-final class ADBProductVersion {
+public class ADBProductVersion {
 
     public static final String ASTERIXDB = "Apache AsterixDB";
 
     private static final Pattern DATABASE_VERSION_PATTERN =
             Pattern.compile("(?<name>[^/]+)(?:/(?<ver>(?:(?<vermj>\\d+)(?:\\.(?<vermn>\\d+))?)?.*))?");
 
-    final String productName;
+    private final String productName;
 
-    final String productVersion;
+    private final String productVersion;
 
-    final int majorVersion;
+    private final int majorVersion;
 
-    final int minorVersion;
+    private final int minorVersion;
 
-    private ADBProductVersion(String productName, String productVersion, int majorVersion, int minorVersion) {
+    public ADBProductVersion(String productName, String productVersion, int majorVersion, int minorVersion) {
         this.productName = productName != null ? productName : ASTERIXDB;
         this.productVersion = productVersion != null ? productVersion : majorVersion + "." + minorVersion;
         this.majorVersion = majorVersion;
         this.minorVersion = minorVersion;
     }
 
-    static ADBProductVersion parseDriverVersion(Package driverPackage) {
+    public String getProductName() {
+        return productName;
+    }
+
+    public String getProductVersion() {
+        return productVersion;
+    }
+
+    public int getMajorVersion() {
+        return majorVersion;
+    }
+
+    public int getMinorVersion() {
+        return minorVersion;
+    }
+
+    public static ADBProductVersion parseDriverVersion(Package driverPackage) {
         int majorVersion = 0, minorVersion = 0;
         String productName = driverPackage.getImplementationTitle();
         if (productName == null) {
@@ -65,7 +81,7 @@ final class ADBProductVersion {
         return new ADBProductVersion(productName, productVersion, majorVersion, minorVersion);
     }
 
-    static ADBProductVersion parseDatabaseVersion(String serverVersion) {
+    public static ADBProductVersion parseDatabaseVersion(String serverVersion) {
         String dbProductName = null;
         String dbProductVersion = null;
         int dbMajorVersion = 0;

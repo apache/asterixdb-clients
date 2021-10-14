@@ -53,7 +53,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.ObjectReader;
 
-final class ADBResultSet extends ADBWrapperSupport implements java.sql.ResultSet {
+public class ADBResultSet extends ADBWrapperSupport implements java.sql.ResultSet {
 
     static final int RESULT_SET_HOLDABILITY = HOLD_CURSORS_OVER_COMMIT;
 
@@ -80,7 +80,8 @@ final class ADBResultSet extends ADBWrapperSupport implements java.sql.ResultSet
 
     // Lifecycle
 
-    ADBResultSet(ADBResultSetMetaData metadata, JsonParser rowParser, boolean rowParserOwnsResources, long maxRows) {
+    public ADBResultSet(ADBResultSetMetaData metadata, JsonParser rowParser, boolean rowParserOwnsResources,
+            long maxRows) {
         this.metadata = Objects.requireNonNull(metadata);
         this.rowParser = Objects.requireNonNull(rowParser);
         this.rowParserOwnsResources = rowParserOwnsResources;
