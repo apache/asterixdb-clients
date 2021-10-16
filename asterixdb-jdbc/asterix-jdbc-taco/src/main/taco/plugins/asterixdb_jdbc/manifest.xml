@@ -87,7 +87,6 @@
       <customization name="CAP_SUPPORTS_UNION" value="no"/>
     </customizations>
   </connection-customization>
-  <!--connection-dialog file='connection-dialog.tcd'/-->
   <connection-fields   file='connection-fields.xml'/>
   <connection-metadata file='connection-metadata.xml'/>
   <connection-resolver file="connectionResolver.tdr"/>

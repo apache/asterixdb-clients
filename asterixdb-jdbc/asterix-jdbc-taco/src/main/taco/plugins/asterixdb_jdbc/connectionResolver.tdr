@@ -29,7 +29,7 @@
           <attr>authentication</attr>
           <attr>username</attr>
           <attr>password</attr>
-          <attr>sslmode</attr>
+          ${taco.plugin.norm.attributes.custom}
         </attribute-list>
       </required-attributes>
     </connection-normalizer>

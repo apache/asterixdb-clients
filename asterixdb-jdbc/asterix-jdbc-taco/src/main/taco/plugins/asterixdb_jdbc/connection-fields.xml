@@ -41,11 +41,6 @@
     </conditions>
   </field>
 
-  <field name="sslmode" label="Require SSL" value-type="boolean" category="general" default-value="" >
-    <boolean-options>
-      <false-value value="" />
-      <true-value value="require" />
-    </boolean-options>
-  </field>
+  ${taco.plugin.fields.custom}
 
 </connection-fields>
