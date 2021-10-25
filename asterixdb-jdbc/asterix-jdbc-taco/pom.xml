@@ -58,12 +58,14 @@
 
     <taco.sourceDirectory>${project.basedir}/src/main/taco</taco.sourceDirectory>
 
+    <build.taco.copy.sdk.stage>none</build.taco.copy.sdk.stage>
     <build.taco.init.sdk.stage>none</build.taco.init.sdk.stage>
     <build.taco.package.sdk.stage>none</build.taco.package.sdk.stage>
     <build.taco.package.nosdk.stage>none</build.taco.package.nosdk.stage>
     <build.taco.directory>${project.build.directory}/taco</build.taco.directory>
     <build.taco.gensrc.directory>${build.taco.directory}/generated-sources</build.taco.gensrc.directory>
     <build.taco.gensrc.plugin.class.directory>${build.taco.gensrc.directory}/plugins/${taco.plugin.class}</build.taco.gensrc.plugin.class.directory>
+    <build.taco.sdk.directory>${build.taco.directory}/connector-plugin-sdk</build.taco.sdk.directory>
     <build.taco.log.directory>${build.taco.directory}</build.taco.log.directory>
     <build.taco.package.file>${project.build.directory}/${taco.plugin.class}.taco</build.taco.package.file>
     <build.venv.directory>${project.build.directory}/venv</build.venv.directory>
@@ -104,6 +106,23 @@
                 <resource>
                   <directory>${taco.sourceDirectory}</directory>
                   <filtering>true</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+          <execution>
+            <id>taco-copy-sdk</id>
+            <phase>${build.taco.copy.sdk.stage}</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${build.taco.sdk.directory}</outputDirectory>
+              <resources>
+                <resource>
+                  <!--suppress UnresolvedMavenProperty -->
+                  <directory>${taco.sdk.path}</directory>
+                  <filtering>false</filtering>
                 </resource>
               </resources>
             </configuration>
@@ -158,7 +177,7 @@
             </goals>
             <configuration>
               <executable>${build.venv.python.path}</executable>
-              <workingDirectory>${taco.sdk.path}/connector-packager</workingDirectory>
+              <workingDirectory>${build.taco.sdk.directory}/connector-packager</workingDirectory>
               <arguments>
                 <argument>setup.py</argument>
                 <argument>install</argument>
@@ -178,7 +197,7 @@
             </goals>
             <configuration>
               <executable>${build.venv.python.path}</executable>
-              <workingDirectory>${taco.sdk.path}/connector-packager</workingDirectory>
+              <workingDirectory>${build.taco.sdk.directory}/connector-packager</workingDirectory>
               <arguments>
                 <argument>-m</argument>
                 <argument>connector_packager.package</argument>
@@ -230,7 +249,8 @@
         </property>
       </activation>
       <properties>
-        <build.taco.init.sdk.stage>initialize</build.taco.init.sdk.stage>
+        <build.taco.copy.sdk.stage>generate-resources</build.taco.copy.sdk.stage>
+        <build.taco.init.sdk.stage>process-resources</build.taco.init.sdk.stage>
         <build.taco.package.sdk.stage>package</build.taco.package.sdk.stage>
       </properties>
       <build>
