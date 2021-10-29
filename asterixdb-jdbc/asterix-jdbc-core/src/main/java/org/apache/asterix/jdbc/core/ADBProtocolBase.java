@@ -33,6 +33,8 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -62,6 +64,9 @@ public abstract class ADBProtocolBase {
     private static final String DEFAULT_DATAVERSE = "Default";
     private static final String OPTIONAL_TYPE_SUFFIX = "?";
     private static final String EXPLAIN_ONLY_RESULT_COLUMN_NAME = "$1";
+
+    private static final Pattern DATABASE_VERSION_PATTERN =
+            Pattern.compile("(?<name>[^/]+)(?:/(?<ver>(?:(?<vermj>\\d+)(?:\\.(?<vermn>\\d+))?)?.*))?");
 
     protected final ADBDriverContext driverContext;
     protected final String user;
@@ -216,6 +221,37 @@ public abstract class ADBProtocolBase {
             }
         }
         return paramPos;
+    }
+
+    public ADBProductVersion parseDatabaseVersion(String serverVersion) {
+        String dbProductName = null;
+        String dbProductVersion = null;
+        int dbMajorVersion = 0;
+        int dbMinorVersion = 0;
+        if (serverVersion != null) {
+            Matcher m = DATABASE_VERSION_PATTERN.matcher(serverVersion);
+            if (m.matches()) {
+                dbProductName = m.group("name");
+                dbProductVersion = m.group("ver");
+                String vermj = m.group("vermj");
+                String vermn = m.group("vermn");
+                if (vermj != null) {
+                    try {
+                        dbMajorVersion = Integer.parseInt(vermj);
+                    } catch (NumberFormatException e) {
+                        // ignore (overflow)
+                    }
+                }
+                if (vermn != null) {
+                    try {
+                        dbMinorVersion = Integer.parseInt(vermn);
+                    } catch (NumberFormatException e) {
+                        // ignore (overflow)
+                    }
+                }
+            }
+        }
+        return new ADBProductVersion(dbProductName, dbProductVersion, dbMajorVersion, dbMinorVersion);
     }
 
     public String getDefaultDataverse() {

@@ -19,15 +19,9 @@
 
 package org.apache.asterix.jdbc.core;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 public class ADBProductVersion {
 
     public static final String ASTERIXDB = "Apache AsterixDB";
-
-    private static final Pattern DATABASE_VERSION_PATTERN =
-            Pattern.compile("(?<name>[^/]+)(?:/(?<ver>(?:(?<vermj>\\d+)(?:\\.(?<vermn>\\d+))?)?.*))?");
 
     private final String productName;
 
@@ -60,55 +54,13 @@ public class ADBProductVersion {
         return minorVersion;
     }
 
-    public static ADBProductVersion parseDriverVersion(Package driverPackage) {
-        int majorVersion = 0, minorVersion = 0;
-        String productName = driverPackage.getImplementationTitle();
-        if (productName == null) {
-            productName = ASTERIXDB;
-        }
-        String productVersion = driverPackage.getImplementationVersion();
-        if (productVersion != null) {
-            String[] v = productVersion.split("\\.");
-            try {
-                majorVersion = Integer.parseInt(v[0]);
-                if (v.length > 1) {
-                    minorVersion = Integer.parseInt(v[1]);
-                }
-            } catch (NumberFormatException e) {
-                // ignore
-            }
-        }
-        return new ADBProductVersion(productName, productVersion, majorVersion, minorVersion);
+    public boolean isAtLeast(ADBProductVersion otherVersion) {
+        return majorVersion == otherVersion.majorVersion ? minorVersion >= otherVersion.minorVersion
+                : majorVersion > otherVersion.majorVersion;
     }
 
-    public static ADBProductVersion parseDatabaseVersion(String serverVersion) {
-        String dbProductName = null;
-        String dbProductVersion = null;
-        int dbMajorVersion = 0;
-        int dbMinorVersion = 0;
-        if (serverVersion != null) {
-            Matcher m = DATABASE_VERSION_PATTERN.matcher(serverVersion);
-            if (m.matches()) {
-                dbProductName = m.group("name");
-                dbProductVersion = m.group("ver");
-                String vermj = m.group("vermj");
-                String vermn = m.group("vermn");
-                if (vermj != null) {
-                    try {
-                        dbMajorVersion = Integer.parseInt(vermj);
-                    } catch (NumberFormatException e) {
-                        // ignore (overflow)
-                    }
-                }
-                if (vermn != null) {
-                    try {
-                        dbMinorVersion = Integer.parseInt(vermn);
-                    } catch (NumberFormatException e) {
-                        // ignore (overflow)
-                    }
-                }
-            }
-        }
-        return new ADBProductVersion(dbProductName, dbProductVersion, dbMajorVersion, dbMinorVersion);
+    @Override
+    public String toString() {
+        return productName + '/' + productVersion;
     }
 }

@@ -31,6 +31,7 @@ import org.apache.asterix.jdbc.core.ADBDriverBase;
 import org.apache.asterix.jdbc.core.ADBDriverContext;
 import org.apache.asterix.jdbc.core.ADBDriverProperty;
 import org.apache.asterix.jdbc.core.ADBErrorReporter;
+import org.apache.asterix.jdbc.core.ADBProductVersion;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 
@@ -81,5 +82,27 @@ public class Driver extends ADBDriverBase implements java.sql.Driver {
                 return isInstanceOf(e, ADBProtocol.TRANSIENT_CONNECTION_ERRORS);
             }
         };
+    }
+
+    @Override
+    protected ADBProductVersion getDriverVersion() {
+        Package driverPackage = getClass().getPackage();
+        return parseDriverVersion(driverPackage.getImplementationTitle(), driverPackage.getImplementationVersion());
+    }
+
+    private static ADBProductVersion parseDriverVersion(String productName, String productVersion) {
+        int majorVersion = 0, minorVersion = 0;
+        if (productVersion != null) {
+            String[] v = productVersion.split("\\.");
+            try {
+                majorVersion = Integer.parseInt(v[0]);
+                if (v.length > 1) {
+                    minorVersion = Integer.parseInt(v[1]);
+                }
+            } catch (NumberFormatException e) {
+                // ignore
+            }
+        }
+        return new ADBProductVersion(productName, productVersion, majorVersion, minorVersion);
     }
 }

@@ -29,8 +29,10 @@ import java.sql.SQLWarning;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -53,11 +55,18 @@ public abstract class ADBDriverBase {
 
     protected final int defaultApiPort;
 
+    protected final ADBErrorReporter errorReporter;
+
+    private volatile ADBProductVersion driverVersion;
+
+    private volatile Map<String, ADBDriverProperty> supportedPropertiesIndex;
+
     private volatile ADBDriverContext context;
 
     public ADBDriverBase(String driverScheme, int defaultApiPort) {
         this.urlScheme = JDBC_SCHEME + Objects.requireNonNull(driverScheme);
         this.defaultApiPort = defaultApiPort;
+        this.errorReporter = createErrorReporter();
     }
 
     protected static void registerDriver(java.sql.Driver driver) {
@@ -68,23 +77,23 @@ public abstract class ADBDriverBase {
         }
     }
 
-    protected static void parseConnectionProperties(Properties inProps, ADBDriverContext driverContext,
-            Map<ADBDriverProperty, Object> outProperties, SQLWarning outWarning) throws SQLException {
+    protected void parseConnectionProperties(Properties inProps, Map<ADBDriverProperty, Object> outProperties,
+            Map<String, ADBDriverProperty> supportedProperties, SQLWarning outWarning) throws SQLException {
         if (inProps != null) {
             for (Enumeration<?> en = inProps.propertyNames(); en.hasMoreElements();) {
                 String name = en.nextElement().toString();
                 String value = inProps.getProperty(name);
-                parseConnectionProperty(name, value, driverContext, outProperties, outWarning);
+                parseConnectionProperty(name, value, supportedProperties, outProperties, outWarning);
             }
         }
     }
 
-    protected static void parseConnectionProperty(String name, String textValue, ADBDriverContext driverContext,
-            Map<ADBDriverProperty, Object> outProperties, SQLWarning outWarning) throws SQLException {
-        ADBDriverProperty property = driverContext.getSupportedProperties().get(name);
+    protected void parseConnectionProperty(String name, String textValue,
+            Map<String, ADBDriverProperty> supportedProperties, Map<ADBDriverProperty, Object> outProperties,
+            SQLWarning outWarning) throws SQLException {
+        ADBDriverProperty property = supportedProperties.get(name);
         if (property == null) {
-            outWarning.setNextWarning(
-                    new SQLWarning(driverContext.getErrorReporter().warningParameterNotSupported(name)));
+            outWarning.setNextWarning(new SQLWarning(errorReporter.warningParameterNotSupported(name)));
             return;
         }
         if (textValue == null || textValue.isEmpty()) {
@@ -94,7 +103,7 @@ public abstract class ADBDriverBase {
         try {
             value = Objects.requireNonNull(property.getValueParser().apply(textValue));
         } catch (RuntimeException e) {
-            throw driverContext.getErrorReporter().errorParameterValueNotSupported(name);
+            throw errorReporter.errorParameterValueNotSupported(name);
         }
         outProperties.put(property, value);
     }
@@ -135,34 +144,34 @@ public abstract class ADBDriverBase {
         try {
             subUri = new URI(url.substring(JDBC_SCHEME.length()));
         } catch (URISyntaxException e) {
-            throw createErrorReporter().errorParameterValueNotSupported("URL");
+            throw errorReporter.errorParameterValueNotSupported("URL");
         }
         String host = subUri.getHost();
         if (host == null) {
-            throw createErrorReporter().errorParameterValueNotSupported("URL");
+            throw errorReporter.errorParameterValueNotSupported("URL");
         }
         int port = subUri.getPort();
         if (port <= 0) {
             port = defaultApiPort;
         }
 
-        Properties uriParams = getURIParameters(subUri);
-
-        ADBDriverContext driverContext = getOrCreateDriverContext();
-        SQLWarning warning = new SQLWarning();
         Map<ADBDriverProperty, Object> properties = new HashMap<>();
-        parseConnectionProperties(uriParams, driverContext, properties, warning);
-        parseConnectionProperties(info, driverContext, properties, warning);
-
+        Map<String, ADBDriverProperty> supportedProperties = getOrCreateSupportedPropertiesIndex();
+        SQLWarning warning = new SQLWarning();
+        parseConnectionProperties(getURIParameters(subUri), properties, supportedProperties, warning);
+        parseConnectionProperties(info, properties, supportedProperties, warning);
         warning = warning.getNextWarning() != null ? warning.getNextWarning() : null;
 
-        String path = subUri.getPath();
-        String dataverseCanonicalName =
-                path != null && path.length() > 1 && path.startsWith("/") ? path.substring(1) : null;
+        checkDriverVersion(properties);
 
+        String dataverseCanonicalName = getDataverseCanonicalNameFromURI(subUri);
+
+        ADBDriverContext driverContext = getOrCreateDriverContext();
         ADBProtocolBase protocol = createProtocol(host, port, properties, driverContext);
         try {
-            String databaseVersion = protocol.connect();
+            String serverVersion = protocol.connect();
+            ADBProductVersion databaseVersion = protocol.parseDatabaseVersion(serverVersion);
+            checkDatabaseVersion(properties, databaseVersion);
             return createConnection(protocol, url, databaseVersion, dataverseCanonicalName, properties, warning);
         } catch (SQLException e) {
             try {
@@ -174,9 +183,13 @@ public abstract class ADBDriverBase {
         }
     }
 
+    protected String getDataverseCanonicalNameFromURI(URI subUri) {
+        String path = subUri.getPath();
+        return path != null && path.length() > 1 && path.startsWith("/") ? path.substring(1) : null;
+    }
+
     public DriverPropertyInfo[] getPropertyInfo(String url, Properties info) {
-        Collection<ADBDriverProperty> supportedProperties =
-                getOrCreateDriverContext().getSupportedProperties().values();
+        Collection<ADBDriverProperty> supportedProperties = getOrCreateSupportedPropertiesIndex().values();
         List<DriverPropertyInfo> result = new ArrayList<>(supportedProperties.size());
         for (ADBDriverProperty property : supportedProperties) {
             if (property.isHidden()) {
@@ -191,11 +204,11 @@ public abstract class ADBDriverBase {
     }
 
     public int getMajorVersion() {
-        return getOrCreateDriverContext().getDriverVersion().getMajorVersion();
+        return getOrCreateDriverVersion().getMajorVersion();
     }
 
     public int getMinorVersion() {
-        return getOrCreateDriverContext().getDriverVersion().getMinorVersion();
+        return getOrCreateDriverVersion().getMinorVersion();
     }
 
     public boolean jdbcCompliant() {
@@ -211,29 +224,82 @@ public abstract class ADBDriverBase {
     }
 
     protected ADBDriverContext getOrCreateDriverContext() {
-        ADBDriverContext ctx = context;
-        if (ctx == null) {
+        ADBDriverContext result = context;
+        if (result == null) {
             synchronized (this) {
-                ctx = context;
-                if (ctx == null) {
-                    context = ctx = createDriverContext();
+                result = context;
+                if (result == null) {
+                    context = result = createDriverContext();
                 }
             }
         }
-        return ctx;
+        return result;
     }
 
     protected ADBDriverContext createDriverContext() {
-        return new ADBDriverContext(getDriverVersion(), getDriverSupportedProperties(), createErrorReporter(),
-                getLogger());
+        return new ADBDriverContext(getOrCreateDriverVersion(), errorReporter, getLogger());
     }
 
-    protected ADBProductVersion getDriverVersion() {
-        return ADBProductVersion.parseDriverVersion(getClass().getPackage());
+    protected ADBProductVersion getOrCreateDriverVersion() {
+        ADBProductVersion result = driverVersion;
+        if (result == null) {
+            synchronized (this) {
+                result = driverVersion;
+                if (result == null) {
+                    driverVersion = result = getDriverVersion();
+                }
+            }
+        }
+        return result;
     }
 
-    protected Collection<ADBDriverProperty> getDriverSupportedProperties() {
+    protected abstract ADBProductVersion getDriverVersion();
+
+    protected Collection<ADBDriverProperty> getSupportedProperties() {
         return Arrays.asList(ADBDriverProperty.Common.values());
+    }
+
+    private Map<String, ADBDriverProperty> getOrCreateSupportedPropertiesIndex() {
+        Map<String, ADBDriverProperty> result = supportedPropertiesIndex;
+        if (result == null) {
+            synchronized (this) {
+                result = supportedPropertiesIndex;
+                if (result == null) {
+                    supportedPropertiesIndex = result = createPropertyIndexByName(getSupportedProperties());
+                }
+            }
+        }
+        return result;
+    }
+
+    private static Map<String, ADBDriverProperty> createPropertyIndexByName(Collection<ADBDriverProperty> properties) {
+        Map<String, ADBDriverProperty> m = new LinkedHashMap<>();
+        for (ADBDriverProperty p : properties) {
+            m.put(p.getPropertyName(), p);
+        }
+        return Collections.unmodifiableMap(m);
+    }
+
+    public void checkDriverVersion(Map<ADBDriverProperty, Object> properties) throws SQLException {
+        ADBProductVersion minExpectedVersion =
+                (ADBProductVersion) ADBDriverProperty.Common.MIN_DRIVER_VERSION.fetchPropertyValue(properties);
+        if (minExpectedVersion != null) {
+            ADBProductVersion driverVersion = getOrCreateDriverVersion();
+            if (!driverVersion.isAtLeast(minExpectedVersion)) {
+                throw errorReporter.errorUnexpectedDriverVersion(driverVersion, minExpectedVersion);
+            }
+        }
+    }
+
+    public void checkDatabaseVersion(Map<ADBDriverProperty, Object> properties, ADBProductVersion databaseVersion)
+            throws SQLException {
+        ADBProductVersion minExpectedVersion =
+                (ADBProductVersion) ADBDriverProperty.Common.MIN_DATABASE_VERSION.fetchPropertyValue(properties);
+        if (minExpectedVersion != null) {
+            if (!databaseVersion.isAtLeast(minExpectedVersion)) {
+                throw errorReporter.errorUnexpectedDatabaseVersion(databaseVersion, minExpectedVersion);
+            }
+        }
     }
 
     protected ADBErrorReporter createErrorReporter() {
@@ -243,7 +309,7 @@ public abstract class ADBDriverBase {
     protected abstract ADBProtocolBase createProtocol(String host, int port, Map<ADBDriverProperty, Object> properties,
             ADBDriverContext driverContext) throws SQLException;
 
-    protected ADBConnection createConnection(ADBProtocolBase protocol, String url, String databaseVersion,
+    protected ADBConnection createConnection(ADBProtocolBase protocol, String url, ADBProductVersion databaseVersion,
             String dataverseCanonicalName, Map<ADBDriverProperty, Object> properties, SQLWarning connectWarning)
             throws SQLException {
         return new ADBConnection(protocol, url, databaseVersion, dataverseCanonicalName, properties, connectWarning);

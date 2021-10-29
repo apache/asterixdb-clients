@@ -19,10 +19,6 @@
 
 package org.apache.asterix.jdbc.core;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Logger;
 
@@ -40,8 +36,6 @@ public class ADBDriverContext {
 
     private final ADBProductVersion driverVersion;
 
-    private final Map<String, ADBDriverProperty> supportedProperties;
-
     private final ADBErrorReporter errorReporter;
 
     private final Logger logger;
@@ -54,12 +48,10 @@ public class ADBDriverContext {
 
     private final ObjectWriter admFormatObjectWriter;
 
-    public ADBDriverContext(ADBProductVersion driverVersion, Collection<ADBDriverProperty> driverSupportedProperties,
-            ADBErrorReporter errorReporter, Logger logger) {
+    public ADBDriverContext(ADBProductVersion driverVersion, ADBErrorReporter errorReporter, Logger logger) {
         this.driverVersion = Objects.requireNonNull(driverVersion);
         this.errorReporter = Objects.requireNonNull(errorReporter);
         this.logger = Objects.requireNonNull(logger);
-        this.supportedProperties = createPropertyIndexByName(driverSupportedProperties);
 
         ObjectMapper genericObjectMapper = createGenericObjectMapper();
         this.genericObjectReader = genericObjectMapper.reader();
@@ -90,14 +82,6 @@ public class ADBDriverContext {
         return mapper;
     }
 
-    private Map<String, ADBDriverProperty> createPropertyIndexByName(Collection<ADBDriverProperty> properties) {
-        Map<String, ADBDriverProperty> m = new LinkedHashMap<>();
-        for (ADBDriverProperty p : properties) {
-            m.put(p.getPropertyName(), p);
-        }
-        return Collections.unmodifiableMap(m);
-    }
-
     public ADBErrorReporter getErrorReporter() {
         return errorReporter;
     }
@@ -124,9 +108,5 @@ public class ADBDriverContext {
 
     public ADBProductVersion getDriverVersion() {
         return driverVersion;
-    }
-
-    public Map<String, ADBDriverProperty> getSupportedProperties() {
-        return supportedProperties;
     }
 }

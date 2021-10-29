@@ -35,35 +35,36 @@ public class ADBDatabaseMetaData extends ADBWrapperSupport implements DatabaseMe
 
     protected final ADBMetaStatement metaStatement;
 
-    protected final String databaseVersionText;
+    protected final ADBProductVersion driverVersion;
 
-    private volatile ADBProductVersion databaseVersion;
+    protected final ADBProductVersion databaseVersion;
 
-    public ADBDatabaseMetaData(ADBMetaStatement metaStatement, String databaseVersionText) {
+    public ADBDatabaseMetaData(ADBMetaStatement metaStatement, ADBProductVersion databaseVersion) {
         this.metaStatement = Objects.requireNonNull(metaStatement);
-        this.databaseVersionText = databaseVersionText;
+        this.driverVersion = metaStatement.connection.protocol.getDriverContext().getDriverVersion();
+        this.databaseVersion = databaseVersion;
     }
 
     // Driver name and version
 
     @Override
     public String getDriverName() {
-        return metaStatement.connection.protocol.getDriverContext().getDriverVersion().getProductName();
+        return driverVersion.getProductName();
     }
 
     @Override
     public String getDriverVersion() {
-        return metaStatement.connection.protocol.getDriverContext().getDriverVersion().getProductVersion();
+        return driverVersion.getProductVersion();
     }
 
     @Override
     public int getDriverMajorVersion() {
-        return metaStatement.connection.protocol.getDriverContext().getDriverVersion().getMajorVersion();
+        return driverVersion.getMajorVersion();
     }
 
     @Override
     public int getDriverMinorVersion() {
-        return metaStatement.connection.protocol.getDriverContext().getDriverVersion().getMinorVersion();
+        return driverVersion.getMinorVersion();
     }
 
     @Override
@@ -80,30 +81,22 @@ public class ADBDatabaseMetaData extends ADBWrapperSupport implements DatabaseMe
 
     @Override
     public String getDatabaseProductName() {
-        return getDatabaseVersion().getProductName();
+        return databaseVersion.getProductName();
     }
 
     @Override
     public String getDatabaseProductVersion() {
-        return getDatabaseVersion().getProductVersion();
+        return databaseVersion.getProductVersion();
     }
 
     @Override
     public int getDatabaseMajorVersion() {
-        return getDatabaseVersion().getMajorVersion();
+        return databaseVersion.getMajorVersion();
     }
 
     @Override
     public int getDatabaseMinorVersion() {
-        return getDatabaseVersion().getMinorVersion();
-    }
-
-    protected ADBProductVersion getDatabaseVersion() {
-        ADBProductVersion result = databaseVersion;
-        if (result == null) {
-            databaseVersion = result = ADBProductVersion.parseDatabaseVersion(databaseVersionText);
-        }
-        return result;
+        return databaseVersion.getMinorVersion();
     }
 
     // Database objects

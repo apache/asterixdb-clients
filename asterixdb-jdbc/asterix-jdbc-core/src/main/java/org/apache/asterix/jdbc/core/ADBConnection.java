@@ -50,7 +50,7 @@ public class ADBConnection extends ADBWrapperSupport implements Connection {
 
     protected final ADBProtocolBase protocol;
     protected final String url;
-    protected final String databaseVersion;
+    protected final ADBProductVersion databaseVersion;
     protected final ADBDriverProperty.CatalogDataverseMode catalogDataverseMode;
     protected final boolean catalogIncludesSchemaless;
     protected final boolean sqlCompatMode;
@@ -63,8 +63,9 @@ public class ADBConnection extends ADBWrapperSupport implements Connection {
 
     // Lifecycle
 
-    public ADBConnection(ADBProtocolBase protocol, String url, String databaseVersion, String dataverseCanonicalName,
-            Map<ADBDriverProperty, Object> properties, SQLWarning connectWarning) throws SQLException {
+    public ADBConnection(ADBProtocolBase protocol, String url, ADBProductVersion databaseVersion,
+            String dataverseCanonicalName, Map<ADBDriverProperty, Object> properties, SQLWarning connectWarning)
+            throws SQLException {
         this.url = Objects.requireNonNull(url);
         this.protocol = Objects.requireNonNull(protocol);
         this.databaseVersion = databaseVersion;

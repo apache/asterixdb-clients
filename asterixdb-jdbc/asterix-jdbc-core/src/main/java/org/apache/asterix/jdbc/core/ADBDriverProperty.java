@@ -43,8 +43,11 @@ public interface ADBDriverProperty {
         CATALOG_DATAVERSE_MODE("catalogDataverseMode", Integer::parseInt, 1, false), // 1 -> CATALOG, 2 -> CATALOG_SCHEMA
         CATALOG_INCLUDES_SCHEMALESS("catalogIncludesSchemaless", Boolean::parseBoolean, false, false),
         SQL_COMPAT_MODE("sqlCompatMode", Boolean::parseBoolean, true, false), // Whether user statements are executed in 'SQL-compat' mode
-        ACTIVE_REQUESTS_PATH("activeRequestsPath", Function.identity(), null, true),
-        SSL("ssl", Boolean::parseBoolean, false, false);
+        SSL("ssl", Boolean::parseBoolean, false, false),
+        // Hidden properties
+        MIN_DRIVER_VERSION("minDriverVersion", Common::parseMinVersion, null, true),
+        MIN_DATABASE_VERSION("minDatabaseVersion", Common::parseMinVersion, null, true),
+        ACTIVE_REQUESTS_PATH("activeRequestsPath", Function.identity(), null, true);
 
         private final String propertyName;
 
@@ -88,6 +91,22 @@ public interface ADBDriverProperty {
 
         public Object fetchPropertyValue(Map<ADBDriverProperty, Object> properties) {
             return properties.getOrDefault(this, defaultValue);
+        }
+
+        public static ADBProductVersion parseMinVersion(String text) {
+            String[] parts = text.split("\\.");
+            int major, minor = 0;
+            switch (parts.length) {
+                case 2:
+                    minor = Integer.parseInt(parts[1]);
+                    // fall thru to 1
+                case 1:
+                    major = Integer.parseInt(parts[0]);
+                    break;
+                default:
+                    throw new IllegalArgumentException(text);
+            }
+            return new ADBProductVersion(null, text, major, minor);
         }
     }
 

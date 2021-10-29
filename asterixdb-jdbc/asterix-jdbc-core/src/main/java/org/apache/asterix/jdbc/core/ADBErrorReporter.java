@@ -67,6 +67,19 @@ public class ADBErrorReporter {
         return String.format("Ignored unsupported or invalid value of %s parameter", parameterName);
     }
 
+    public SQLException errorUnexpectedDriverVersion(ADBProductVersion version, ADBProductVersion minExpectedVersion) {
+        return new SQLException(
+                String.format("Unexpected driver version %s. Expected at least %s.%s", version.getProductVersion(),
+                        minExpectedVersion.getMajorVersion(), minExpectedVersion.getMinorVersion()));
+    }
+
+    public SQLException errorUnexpectedDatabaseVersion(ADBProductVersion version,
+            ADBProductVersion minExpectedVersion) {
+        return new SQLException(
+                String.format("Unexpected database version %s. Expected at least %s.%s", version.getProductVersion(),
+                        minExpectedVersion.getMajorVersion(), minExpectedVersion.getMinorVersion()));
+    }
+
     public SQLException errorIncompatibleMode(String mode) {
         return new SQLException(String.format("Operation cannot be performed in %s mode", mode));
     }
