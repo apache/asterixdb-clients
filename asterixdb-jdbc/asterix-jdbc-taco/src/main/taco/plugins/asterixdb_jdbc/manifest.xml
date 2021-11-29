@@ -21,7 +21,7 @@
   <vendor-information>
       <company name="${taco.plugin.vendor}"/>
       <support-link url="${taco.plugin.site}"/>
-      <driver-download-link url="${taco.plugin.site}"/>
+      <driver-download-link url="${taco.plugin.site.download}"/>
   </vendor-information>
   <connection-customization class="${taco.plugin.class}" enabled="true" version="10.0">
     <vendor name="vendor"/>

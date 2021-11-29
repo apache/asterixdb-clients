@@ -46,6 +46,7 @@
     <taco.plugin.version>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}</taco.plugin.version>
     <taco.plugin.vendor>Apache</taco.plugin.vendor>
     <taco.plugin.site>https://asterixdb.apache.org</taco.plugin.site>
+    <taco.plugin.site.download>${taco.plugin.site}</taco.plugin.site.download>
     <taco.plugin.dialect>AsterixDB</taco.plugin.dialect>
     <taco.plugin.database.label>Dataverse</taco.plugin.database.label>
     <taco.plugin.database.default>Default</taco.plugin.database.default>
