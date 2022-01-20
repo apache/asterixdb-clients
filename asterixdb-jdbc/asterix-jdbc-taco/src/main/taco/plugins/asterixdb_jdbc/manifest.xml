@@ -33,11 +33,8 @@
 
       <!-- Temporary Tables -->
       <customization name="CAP_CREATE_TEMP_TABLES" value="no"/>
-      <!--customization name="CAP_INDEX_TEMP_TABLES" value="no" /-->
       <customization name="CAP_SELECT_INTO" value="no"/>
       <customization name="CAP_SELECT_TOP_INTO" value="no"/>
-      <!--customization name="CAP_TEMP_TABLES_NOT_SESSION_SCOPED" value="yes" /-->
-      <!--customization name="CAP_SUPPRESS_TEMP_TABLE_CHECKS" value="yes" /-->
 
       <!-- String Splits -->
       <customization name="CAP_SUPPORTS_SPLIT_FROM_LEFT" value="yes"/>
@@ -83,7 +80,7 @@
 
       <!-- Uncommon -->
       <customization name="CAP_SUPPRESS_GET_SERVER_TIME" value="no"/>
-      <customization name="CAP_SUPPORTS_UNION" value="no"/>
+      <customization name="CAP_SUPPORTS_UNION" value="yes"/>
     </customizations>
   </connection-customization>
   <connection-fields   file='connection-fields.xml'/>
