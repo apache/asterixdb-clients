@@ -18,7 +18,7 @@
  !-->
 <connection-fields>
 
-  <field name="server" label="Server" category="endpoint" value-type="string">
+  <field name="server" label="Server" category="endpoint" value-type="string" default-value="localhost">
     <validation-rule reg-exp="^[^/]+$"/>
   </field>
 
