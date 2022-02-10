@@ -21,12 +21,12 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.asterix</groupId>
   <artifactId>apache-asterixdb-jdbc</artifactId>
-  <version>0.9.7-SNAPSHOT</version>
+  <version>0.9.7.1</version>
   <packaging>pom</packaging>
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>18</version>
+    <version>21</version>
     <relativePath />
   </parent>
   <licenses>

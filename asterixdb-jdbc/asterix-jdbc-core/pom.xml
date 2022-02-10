@@ -23,7 +23,7 @@
   <parent>
     <artifactId>apache-asterixdb-jdbc</artifactId>
     <groupId>org.apache.asterix</groupId>
-    <version>0.9.7-SNAPSHOT</version>
+    <version>0.9.7.1</version>
   </parent>
   <artifactId>asterix-jdbc-core</artifactId>
 
