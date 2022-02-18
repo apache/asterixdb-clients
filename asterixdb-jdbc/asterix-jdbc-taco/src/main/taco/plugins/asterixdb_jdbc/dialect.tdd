@@ -1475,7 +1475,6 @@
         <part name='second' value='SECOND' />
       </date-part-group>
     </date-parts>
-    <format-bool-as-value value='TrueFirst' />
     <format-column-definition>
       <local-type name='int'>
         <remote-type name='I1' value='TINYINT' />
@@ -1508,7 +1507,7 @@
     <format-drop-table>
       <formula>DROP DATASET %1</formula>
     </format-drop-table>
-    <format-false value='FALSE' />
+    <format-false literal='FALSE' predicate='FALSE' />
     <format-if-then-else value='Case' />
     <format-index value='ColumnNameOnly' />
     <format-insert value='Individual' />
@@ -1526,7 +1525,7 @@
     <format-simple-case value='Case' />
     <!--format-stored-proc-call--> <!-- Not supported -->
     <format-string-literal value='Extended' />
-    <format-true value='TRUE' />
+    <format-true literal='TRUE' predicate='TRUE' />
     <icu-date-token-map>
       <!-- used by DATEPARSE -->
       <!-- http://userguide.icu-project.org/formatparse/datetime -->
