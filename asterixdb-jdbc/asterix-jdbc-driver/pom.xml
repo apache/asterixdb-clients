@@ -40,6 +40,9 @@
     <root.dir>${basedir}/..</root.dir>
     <source.java.package.path>org/apache/asterix/jdbc/</source.java.package.path>
     <implementation.title>Apache AsterixDB JDBC Driver</implementation.title>
+    <build.dist.classifier>dist</build.dist.classifier>
+    <build.license.directory>${project.build.directory}/license</build.license.directory>
+    <build.license.resources.directory>${build.license.directory}/resources</build.license.resources.directory>
   </properties>
 
   <dependencies>
@@ -69,6 +72,70 @@
   <build>
     <plugins>
       <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <!-- Copy license for jar -->
+            <id>copy-license</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <copy todir="${project.build.directory}/classes/META-INF" overwrite="true">
+                  <fileset dir="${root.dir}">
+                    <include name="LICENSE"/>
+                    <include name="NOTICE"/>
+                  </fileset>
+                </copy>
+              </target>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <!-- Generate license for dist jar -->
+        <groupId>org.apache.hyracks</groupId>
+        <artifactId>license-automation-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <outputDir>${build.license.resources.directory}/META-INF</outputDir>
+          <templateRootDir>${root.dir}</templateRootDir>
+          <generatedFiles>
+            <generatedFile>
+              <template>src/main/licenses/templates/asterix-jdbc-driver-license.ftl</template>
+              <outputFile>LICENSE</outputFile>
+            </generatedFile>
+            <generatedFile>
+              <template>src/main/licenses/templates/asterix-jdbc-driver-notice.ftl</template>
+              <outputFile>NOTICE</outputFile>
+            </generatedFile>
+          </generatedFiles>
+          <licenseDirectory>${root.dir}/src/main/licenses/content</licenseDirectory>
+          <licenseMapOutputFile>${build.license.directory}/license_map.json</licenseMapOutputFile>
+          <location>${project.artifactId}-${project.version}-${build.dist.classifier}.jar/</location>
+          <timeoutSecs>10</timeoutSecs>
+          <downloadDir>${build.license.directory}/download</downloadDir>
+          <excludedScopes>
+            <excludedScope>test</excludedScope>
+          </excludedScopes>
+          <excludes>
+            <exclude>org.apache.asterix:*</exclude>
+          </excludes>
+          <templateProperties>
+            <packageName>${implementation.title}</packageName>
+          </templateProperties>
+        </configuration>
+      </plugin>
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
         <configuration>
@@ -96,14 +163,17 @@
             </goals>
             <configuration>
               <shadedArtifactAttached>true</shadedArtifactAttached>
-              <shadedClassifierName>dist</shadedClassifierName>
+              <shadedClassifierName>${build.dist.classifier}</shadedClassifierName>
               <transformers>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer"/>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer">
-                  <addHeader>false</addHeader>
-                </transformer>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.PluginXmlResourceTransformer"/>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+                  <resource>META-INF/LICENSE</resource>
+                  <file>${build.license.resources.directory}/META-INF/LICENSE</file>
+                </transformer>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+                  <resource>META-INF/NOTICE</resource>
+                  <file>${build.license.resources.directory}/META-INF/NOTICE</file>
+                </transformer>
               </transformers>
               <relocations>
                 <relocation>
@@ -113,8 +183,17 @@
               </relocations>
               <filters>
                 <filter>
+                  <artifact>org.apache.asterix:asterix-jdbc-driver</artifact>
+                  <excludes>
+                    <exclude>META-INF/NOTICE</exclude>
+                    <exclude>META-INF/LICENSE</exclude>
+                  </excludes>
+                </filter>
+                <filter>
                   <artifact>org.apache.asterix:asterix-jdbc-core</artifact>
                   <excludes>
+                    <exclude>META-INF/NOTICE</exclude>
+                    <exclude>META-INF/LICENSE</exclude>
                     <exclude>META-INF/MANIFEST.MF</exclude>
                   </excludes>
                 </filter>
@@ -134,8 +213,8 @@
                   <excludes>
                     <exclude>module-info.class</exclude>
                     <exclude>META-INF/maven/commons-logging/*/pom.*</exclude>
-                    <exclude>META-INF/NOTICE</exclude>
-                    <exclude>META-INF/LICENSE</exclude>
+                    <exclude>META-INF/NOTICE.*</exclude>
+                    <exclude>META-INF/LICENSE.*</exclude>
                     <exclude>META-INF/MANIFEST.MF</exclude>
                   </excludes>
                 </filter>
@@ -144,8 +223,8 @@
                   <excludes>
                     <exclude>module-info.class</exclude>
                     <exclude>META-INF/maven/commons-codec/*/pom.*</exclude>
-                    <exclude>META-INF/NOTICE</exclude>
-                    <exclude>META-INF/LICENSE</exclude>
+                    <exclude>META-INF/NOTICE.*</exclude>
+                    <exclude>META-INF/LICENSE.*</exclude>
                     <exclude>META-INF/MANIFEST.MF</exclude>
                   </excludes>
                 </filter>

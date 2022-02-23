@@ -68,7 +68,8 @@
     <build.taco.gensrc.plugin.class.directory>${build.taco.gensrc.directory}/plugins/${taco.plugin.class}</build.taco.gensrc.plugin.class.directory>
     <build.taco.sdk.directory>${build.taco.directory}/connector-plugin-sdk</build.taco.sdk.directory>
     <build.taco.log.directory>${build.taco.directory}</build.taco.log.directory>
-    <build.taco.package.file>${project.build.directory}/${taco.plugin.class}.taco</build.taco.package.file>
+    <build.taco.filename>${taco.plugin.class}.taco</build.taco.filename>
+    <build.taco.file>${project.build.directory}/${build.taco.filename}</build.taco.file>
     <build.venv.directory>${project.build.directory}/venv</build.venv.directory>
     <build.venv.python.path>${build.venv.directory}/bin/python</build.venv.python.path>
   </properties>
@@ -228,7 +229,7 @@
               <goal>shade</goal>
             </goals>
             <configuration>
-              <outputFile>${build.taco.package.file}</outputFile>
+              <outputFile>${build.taco.file}</outputFile>
               <artifactSet>
                 <includes>
                   <include>org.apache.asterix:asterix-jdbc-taco</include>
@@ -237,6 +238,43 @@
             </configuration>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+      <artifactId>maven-antrun-plugin</artifactId>
+      <executions>
+        <execution>
+          <!-- Print warning if .taco was not packaged by TACO SDK   -->
+          <id>taco-package-nosdk-warn</id>
+          <phase>${build.taco.package.nosdk.stage}</phase>
+          <goals>
+            <goal>run</goal>
+          </goals>
+          <configuration>
+            <target>
+              <echo level="warning">WARNING: Tableau Connector SDK was not used for ${build.taco.filename} packaging because 'taco.sdk.path' property is not set</echo>
+            </target>
+          </configuration>
+        </execution>
+        <execution>
+          <!-- Add license to .taco file -->
+          <id>taco-package-add-license</id>
+          <phase>package</phase>
+          <goals>
+            <goal>run</goal>
+          </goals>
+          <configuration>
+            <target>
+              <echo>Adding license to ${build.taco.filename}</echo>
+              <jar file="${build.taco.file}" update="true">
+                <fileset dir="${project.build.directory}/classes">
+                  <include name="META-INF/LICENSE"/>
+                  <include name="META-INF/NOTICE"/>
+                </fileset>
+              </jar>
+            </target>
+          </configuration>
+        </execution>
+      </executions>
       </plugin>
     </plugins>
   </build>
@@ -292,7 +330,7 @@
                   <rules>
                     <requireFilesExist>
                       <files>
-                        <file>${build.taco.package.file}</file>
+                        <file>${build.taco.file}</file>
                       </files>
                     </requireFilesExist>
                   </rules>

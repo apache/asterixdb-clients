@@ -67,6 +67,7 @@
     <implementation.version>${project.version}</implementation.version>
     <implementation.vendor>${project.organization.name}</implementation.vendor>
 
+    <hyracks.version>0.3.7.1</hyracks.version>
     <commons-lang3.version>3.12.0</commons-lang3.version>
     <commons-collections4.version>4.4</commons-collections4.version>
     <httpcore.version>4.4.14</httpcore.version>
@@ -419,6 +420,14 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-shade-plugin</artifactId>
           <version>3.2.4</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.hyracks</groupId>
+          <artifactId>license-automation-plugin</artifactId>
+          <version>${hyracks.version}</version>
+          <configuration>
+            <argLine>-Xmx2048m</argLine>
+          </configuration>
         </plugin>
       </plugins>
     </pluginManagement>
