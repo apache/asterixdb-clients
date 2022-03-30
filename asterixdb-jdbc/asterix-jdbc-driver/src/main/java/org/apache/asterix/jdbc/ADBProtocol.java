@@ -207,8 +207,8 @@ final class ADBProtocol extends ADBProtocolBase {
     }
 
     @Override
-    public QueryServiceResponse submitStatement(String sql, List<?> args, UUID executionId,
-            SubmitStatementOptions options) throws SQLException {
+    public QueryServiceResponse submitStatement(String sql, List<?> args, SubmitStatementOptions options)
+            throws SQLException {
         HttpPost httpPost = new HttpPost(queryEndpoint);
         httpPost.setHeader(HttpHeaders.ACCEPT, ContentType.APPLICATION_JSON
                 .withParameters(new BasicNameValuePair(FORMAT_LOSSLESS_ADM, Boolean.TRUE.toString())).toString());
@@ -239,8 +239,8 @@ final class ADBProtocol extends ADBProtocolBase {
             if (options.dataverseName != null) {
                 jsonGen.writeStringField(DATAVERSE, options.dataverseName);
             }
-            if (executionId != null) {
-                jsonGen.writeStringField(CLIENT_CONTEXT_ID, executionId.toString());
+            if (options.executionId != null) {
+                jsonGen.writeStringField(CLIENT_CONTEXT_ID, options.executionId.toString());
             }
             if (args != null && !args.isEmpty()) {
                 jsonGen.writeFieldName(ARGS);
@@ -305,7 +305,7 @@ final class ADBProtocol extends ADBProtocolBase {
     }
 
     @Override
-    public JsonParser fetchResult(QueryServiceResponse response) throws SQLException {
+    public JsonParser fetchResult(QueryServiceResponse response, SubmitStatementOptions options) throws SQLException {
         if (response.handle == null) {
             throw getErrorReporter().errorInProtocol();
         }

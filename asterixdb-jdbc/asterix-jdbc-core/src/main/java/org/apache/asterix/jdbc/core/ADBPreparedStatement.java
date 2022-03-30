@@ -54,8 +54,7 @@ public class ADBPreparedStatement extends ADBStatement implements PreparedStatem
         ADBProtocolBase.SubmitStatementOptions stmtOptions = createSubmitStatementOptions();
         stmtOptions.compileOnly = true;
         stmtOptions.timeoutSeconds = 0; /* TODO:timeout */
-        ADBProtocolBase.QueryServiceResponse response =
-                connection.protocol.submitStatement(sql, null, null, stmtOptions);
+        ADBProtocolBase.QueryServiceResponse response = connection.protocol.submitStatement(sql, null, stmtOptions);
         int parameterCount = connection.protocol.getStatementParameterCount(response);
         boolean isQuery = connection.protocol.isStatementCategory(response,
                 ADBProtocolBase.QueryServiceResponse.StatementCategory.QUERY);

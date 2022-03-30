@@ -85,10 +85,11 @@ public abstract class ADBProtocolBase {
 
     public abstract boolean ping(int timeoutSeconds);
 
-    public abstract QueryServiceResponse submitStatement(String sql, List<?> args, UUID executionId,
-            SubmitStatementOptions options) throws SQLException;
+    public abstract QueryServiceResponse submitStatement(String sql, List<?> args, SubmitStatementOptions options)
+            throws SQLException;
 
-    public abstract JsonParser fetchResult(QueryServiceResponse response) throws SQLException;
+    public abstract JsonParser fetchResult(QueryServiceResponse response, SubmitStatementOptions options)
+            throws SQLException;
 
     public abstract void cancelRunningStatement(UUID executionId) throws SQLException;
 
@@ -264,6 +265,7 @@ public abstract class ADBProtocolBase {
         public boolean forceReadOnly;
         public boolean compileOnly;
         public boolean sqlCompatMode;
+        public UUID executionId;
     }
 
     public static class QueryServiceResponse {

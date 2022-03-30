@@ -90,6 +90,7 @@ public class ADBStatement extends ADBWrapperSupport implements java.sql.Statemen
     protected final ConcurrentLinkedQueue<WeakReference<ADBResultSet>> resultSetsWithoutResources;
 
     // execute() result field
+    protected ADBProtocolBase.SubmitStatementOptions executeStmtOptions;
     protected ADBProtocolBase.QueryServiceResponse executeResponse;
     protected ADBResultSet executeResultSet;
 
@@ -158,9 +159,9 @@ public class ADBStatement extends ADBWrapperSupport implements java.sql.Statemen
         // note: we're not assigning executeResponse field at this method
         try {
             ADBProtocolBase.SubmitStatementOptions stmtOptions = createSubmitStatementOptions();
+            stmtOptions.executionId = executionId;
             stmtOptions.forceReadOnly = true;
-            ADBProtocolBase.QueryServiceResponse response =
-                    connection.protocol.submitStatement(sql, args, executionId, stmtOptions);
+            ADBProtocolBase.QueryServiceResponse response = connection.protocol.submitStatement(sql, args, stmtOptions);
             boolean isQuery = connection.protocol.isStatementCategory(response,
                     ADBProtocolBase.QueryServiceResponse.StatementCategory.QUERY);
             if (!isQuery) {
@@ -168,7 +169,7 @@ public class ADBStatement extends ADBWrapperSupport implements java.sql.Statemen
             }
             warnings = connection.protocol.getWarningIfExists(response);
             updateCount = -1;
-            return fetchResultSet(response);
+            return fetchResultSet(response, stmtOptions);
         } finally {
             resetExecutionId();
         }
@@ -219,8 +220,8 @@ public class ADBStatement extends ADBWrapperSupport implements java.sql.Statemen
     protected int executeUpdateImpl(String sql, List<Object> args) throws SQLException {
         try {
             ADBProtocolBase.SubmitStatementOptions stmtOptions = createSubmitStatementOptions();
-            ADBProtocolBase.QueryServiceResponse response =
-                    connection.protocol.submitStatement(sql, args, executionId, stmtOptions);
+            stmtOptions.executionId = executionId;
+            ADBProtocolBase.QueryServiceResponse response = connection.protocol.submitStatement(sql, args, stmtOptions);
             boolean isQuery = connection.protocol.isStatementCategory(response,
                     ADBProtocolBase.QueryServiceResponse.StatementCategory.QUERY);
             // TODO: remove result set on the server (both query and update returning cases)
@@ -259,9 +260,10 @@ public class ADBStatement extends ADBWrapperSupport implements java.sql.Statemen
     protected boolean executeImpl(String sql, List<Object> args) throws SQLException {
         try {
             ADBProtocolBase.SubmitStatementOptions stmtOptions = createSubmitStatementOptions();
-            ADBProtocolBase.QueryServiceResponse response =
-                    connection.protocol.submitStatement(sql, args, executionId, stmtOptions);
+            stmtOptions.executionId = executionId;
+            ADBProtocolBase.QueryServiceResponse response = connection.protocol.submitStatement(sql, args, stmtOptions);
             warnings = connection.protocol.getWarningIfExists(response);
+            executeStmtOptions = stmtOptions;
             boolean isQuery = connection.protocol.isStatementCategory(response,
                     ADBProtocolBase.QueryServiceResponse.StatementCategory.QUERY);
             if (isQuery) {
@@ -347,9 +349,10 @@ public class ADBStatement extends ADBWrapperSupport implements java.sql.Statemen
         if (response == null) {
             return null;
         }
-        ADBResultSet rs = fetchResultSet(response);
+        ADBResultSet rs = fetchResultSet(response, executeStmtOptions);
         executeResultSet = rs;
         executeResponse = null;
+        executeStmtOptions = null;
         return rs;
     }
 
@@ -406,7 +409,8 @@ public class ADBStatement extends ADBWrapperSupport implements java.sql.Statemen
 
     // ResultSet lifecycle
 
-    protected ADBResultSet fetchResultSet(ADBProtocolBase.QueryServiceResponse execResponse) throws SQLException {
+    protected ADBResultSet fetchResultSet(ADBProtocolBase.QueryServiceResponse execResponse,
+            ADBProtocolBase.SubmitStatementOptions stmtOptions) throws SQLException {
         List<ADBColumn> columns = connection.protocol.getColumns(execResponse);
         if (getLogger().isLoggable(Level.FINER)) {
             getLogger().log(Level.FINE, "result schema " + columns);
@@ -417,7 +421,7 @@ public class ADBStatement extends ADBWrapperSupport implements java.sql.Statemen
                     connection.protocol.fetchExplainOnlyResult(execResponse, stringSer::serializeToString);
             return createSystemResultSet(columns, explainResult);
         } else {
-            JsonParser rowParser = connection.protocol.fetchResult(execResponse);
+            JsonParser rowParser = connection.protocol.fetchResult(execResponse, stmtOptions);
             return createResultSetImpl(columns, rowParser, true, maxRows);
         }
     }
