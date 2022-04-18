@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -87,6 +88,8 @@ final class ADBProtocol extends ADBProtocolBase {
     private static final String QUERY_RESULT_ENDPOINT_PATH = "/query/service/result";
     private static final String ACTIVE_REQUESTS_ENDPOINT_PATH = "/admin/requests/running";
 
+    private static final int CONNECTION_REQUEST_TIMEOUT = 50; // ms
+
     static final List<Class<? extends IOException>> TIMEOUT_CONNECTION_ERRORS =
             Collections.singletonList(ConnectTimeoutException.class);
 
@@ -100,8 +103,8 @@ final class ADBProtocol extends ADBProtocolBase {
     final HttpClientContext httpClientContext;
     final CloseableHttpClient httpClient;
 
-    public ADBProtocol(String host, int port, Map<ADBDriverProperty, Object> params, ADBDriverContext driverContext)
-            throws SQLException {
+    public ADBProtocol(String host, int port, Map<ADBDriverProperty, Object> params, ADBDriverContext driverContext,
+            int loginTimeoutSeconds) throws SQLException {
         super(driverContext, params);
         boolean sslEnabled = (Boolean) ADBDriverProperty.Common.SSL.fetchPropertyValue(params);
         URI queryEndpoint = createEndpointUri(sslEnabled, host, port, QUERY_SERVICE_ENDPOINT_PATH,
@@ -126,13 +129,14 @@ final class ADBProtocol extends ADBProtocolBase {
         }
         RequestConfig.Builder requestConfigBuilder = RequestConfig.custom();
         Number connectTimeoutMillis = (Number) ADBDriverProperty.Common.CONNECT_TIMEOUT.fetchPropertyValue(params);
-        if (connectTimeoutMillis != null) {
-            requestConfigBuilder.setConnectionRequestTimeout(connectTimeoutMillis.intValue());
-            requestConfigBuilder.setConnectTimeout(connectTimeoutMillis.intValue());
-        }
+        int connectTimeout = Math.max(0, connectTimeoutMillis != null ? connectTimeoutMillis.intValue()
+                : (int) TimeUnit.SECONDS.toMillis(loginTimeoutSeconds));
+        requestConfigBuilder.setConnectTimeout(connectTimeout);
         if (socketTimeoutMillis != null) {
             requestConfigBuilder.setSocketTimeout(socketTimeoutMillis.intValue());
         }
+        requestConfigBuilder.setConnectionRequestTimeout(CONNECTION_REQUEST_TIMEOUT);
+
         RequestConfig requestConfig = requestConfigBuilder.build();
         HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
         httpClientBuilder.setConnectionManager(httpConnectionManager);

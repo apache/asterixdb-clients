@@ -22,6 +22,7 @@ package org.apache.asterix.jdbc;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +54,8 @@ public class Driver extends ADBDriverBase implements java.sql.Driver {
     @Override
     protected ADBProtocol createProtocol(String host, int port, Map<ADBDriverProperty, Object> properties,
             ADBDriverContext driverContext) throws SQLException {
-        return new ADBProtocol(host, port, properties, driverContext);
+        int loginTimeoutSeconds = DriverManager.getLoginTimeout();
+        return new ADBProtocol(host, port, properties, driverContext, loginTimeoutSeconds);
     }
 
     @Override

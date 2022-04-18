@@ -22,6 +22,7 @@ package org.apache.asterix.jdbc.core;
 import java.io.IOException;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.ResultSet;
@@ -692,6 +693,7 @@ public class ADBStatement extends ADBWrapperSupport implements java.sql.Statemen
         // Long is serialized as JSON number by Jackson
         registerSerializer(serializerMap, createFloatSerializer());
         registerSerializer(serializerMap, createDoubleSerializer());
+        registerSerializer(serializerMap, createBigDecimalSerializer());
         registerSerializer(serializerMap, createStringSerializer());
         registerSerializer(serializerMap, createSqlDateSerializer());
         registerSerializer(serializerMap, createSqlDateWithCalendarSerializer());
@@ -750,6 +752,16 @@ public class ADBStatement extends ADBWrapperSupport implements java.sql.Statemen
             @Override
             protected void serializeNonTaggedValue(Object value, StringBuilder out) {
                 long bits = Double.doubleToLongBits((Double) value);
+                out.append(bits);
+            }
+        };
+    }
+
+    protected static ATaggedValueSerializer createBigDecimalSerializer() {
+        return new ATaggedValueSerializer(BigDecimal.class, ADBDatatype.DOUBLE) {
+            @Override
+            protected void serializeNonTaggedValue(Object value, StringBuilder out) {
+                long bits = Double.doubleToLongBits(((BigDecimal) value).doubleValue());
                 out.append(bits);
             }
         };

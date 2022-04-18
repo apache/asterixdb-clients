@@ -332,17 +332,20 @@ public class ADBResultSet extends ADBWrapperSupport implements java.sql.ResultSe
     }
 
     @Override
-    public boolean isBeforeFirst() {
+    public boolean isBeforeFirst() throws SQLException {
+        checkClosed();
         return state == ST_BEFORE_FIRST;
     }
 
     @Override
-    public boolean isAfterLast() {
+    public boolean isAfterLast() throws SQLException {
+        checkClosed();
         return state == ST_AFTER_LAST;
     }
 
     @Override
-    public boolean isFirst() {
+    public boolean isFirst() throws SQLException {
+        checkClosed();
         return state == ST_NEXT && rowNumber == 1;
     }
 
@@ -354,7 +357,7 @@ public class ADBResultSet extends ADBWrapperSupport implements java.sql.ResultSe
     @Override
     public int getRow() throws SQLException {
         checkClosed();
-        return (int) rowNumber;
+        return state == ST_NEXT ? (int) rowNumber : 0;
     }
 
     private void checkCursorPosition() throws SQLException {
@@ -862,7 +865,7 @@ public class ADBResultSet extends ADBWrapperSupport implements java.sql.ResultSe
     }
 
     private InputStream getAsciiStreamImpl(int columnIndex) throws SQLException {
-        String value = getString(columnIndex);
+        String value = getStringImpl(columnIndex);
         return value != null ? new ByteArrayInputStream(value.getBytes(StandardCharsets.US_ASCII)) : null;
     }
 
@@ -881,7 +884,7 @@ public class ADBResultSet extends ADBWrapperSupport implements java.sql.ResultSe
     }
 
     private InputStream getUnicodeStreamImpl(int columnIndex) throws SQLException {
-        String value = getString(columnIndex);
+        String value = getStringImpl(columnIndex);
         return value != null ? new ByteArrayInputStream(value.getBytes(StandardCharsets.UTF_16)) : null;
     }
 

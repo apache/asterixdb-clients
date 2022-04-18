@@ -40,6 +40,10 @@ public class ADBErrorReporter {
         return new SQLException(String.format("%s is closed", jdbcInterface.getSimpleName()));
     }
 
+    public SQLException errorObjectClosed(Class<?> jdbcInterface, SQLState sqlState) {
+        return new SQLException(String.format("%s is closed", jdbcInterface.getSimpleName()), sqlState.code);
+    }
+
     public SQLFeatureNotSupportedException errorMethodNotSupported(Class<?> jdbcInterface, String methodName) {
         return new SQLFeatureNotSupportedException(
                 String.format("Method %s.%s() is not supported", jdbcInterface.getName(), methodName));
@@ -213,6 +217,7 @@ public class ADBErrorReporter {
 
     public enum SQLState {
         CONNECTION_FAILURE("08001"), // TODO:08006??
+        CONNECTION_CLOSED("08003"),
         INVALID_AUTH_SPEC("28000"),
         INVALID_DATE_TYPE("HY004"),
         INVALID_CURSOR_POSITION("HY108");
@@ -221,6 +226,11 @@ public class ADBErrorReporter {
 
         SQLState(String code) {
             this.code = Objects.requireNonNull(code);
+        }
+
+        @Override
+        public String toString() {
+            return code;
         }
     }
 }

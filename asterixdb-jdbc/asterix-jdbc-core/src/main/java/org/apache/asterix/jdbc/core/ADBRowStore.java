@@ -979,7 +979,8 @@ public final class ADBRowStore {
     }
 
     private LocalDate toLocalDateFromDatetimeChronon(long datetimeChrononInMillis) {
-        return LocalDate.ofEpochDay(TimeUnit.MILLISECONDS.toDays(datetimeChrononInMillis));
+        // TODO: use LocalDate.ofInstant() in JDK 9+
+        return toLocalDateTimeFromDatetimeChronon(datetimeChrononInMillis).toLocalDate();
     }
 
     private Time toTimeFromTimeChronon(long timeChrononInMillis, TimeZone tz) {
@@ -996,7 +997,8 @@ public final class ADBRowStore {
     }
 
     private LocalTime toLocalTimeFromDatetimeChronon(long datetimeChrononInMillis) {
-        return LocalTime.ofNanoOfDay(TimeUnit.MILLISECONDS.toNanos(datetimeChrononInMillis));
+        // TODO: use LocalTime.ofInstant() in JDK 9+
+        return toLocalDateTimeFromDatetimeChronon(datetimeChrononInMillis).toLocalTime();
     }
 
     private Timestamp toTimestampFromDatetimeChronon(long datetimeChrononInMillis, TimeZone tz) {

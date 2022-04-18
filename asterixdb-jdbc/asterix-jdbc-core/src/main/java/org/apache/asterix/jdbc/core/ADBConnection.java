@@ -174,7 +174,7 @@ public class ADBConnection extends ADBWrapperSupport implements Connection {
 
     private void checkClosed() throws SQLException {
         if (isClosed()) {
-            throw getErrorReporter().errorObjectClosed(Connection.class);
+            throw getErrorReporter().errorObjectClosed(Connection.class, ADBErrorReporter.SQLState.CONNECTION_CLOSED);
         }
     }
 

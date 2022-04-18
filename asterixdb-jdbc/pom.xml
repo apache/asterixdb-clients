@@ -485,4 +485,19 @@
     <module>asterix-jdbc-driver</module>
     <module>asterix-jdbc-taco</module>
   </modules>
+
+  <profiles>
+    <profile>
+      <id>asterix-jdbc-test-enabled</id>
+      <activation>
+        <file>
+        <exists>${basedir}/../../asterix-app/pom.xml</exists>
+        </file>
+      </activation>
+      <modules>
+        <module>asterix-jdbc-test</module>
+      </modules>
+    </profile>
+  </profiles>
+
 </project>

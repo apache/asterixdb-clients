@@ -336,22 +336,30 @@ public class ADBPreparedStatement extends ADBStatement implements PreparedStatem
 
     @Override
     public void setObject(int parameterIndex, Object v, int targetSqlType) throws SQLException {
-        setObject(parameterIndex, v); // TODO:revisit
+        setObject(parameterIndex, v);
     }
 
     @Override
     public void setObject(int parameterIndex, Object v, SQLType targetSqlType) throws SQLException {
-        setObject(parameterIndex, v, targetSqlType.getVendorTypeNumber()); // TODO:revisit
+        if (targetSqlType == null) {
+            setObject(parameterIndex, v);
+        } else {
+            setObject(parameterIndex, v, targetSqlType.getVendorTypeNumber());
+        }
     }
 
     @Override
     public void setObject(int parameterIndex, Object v, int targetSqlType, int scaleOrLength) throws SQLException {
-        setObject(parameterIndex, v, targetSqlType); // TODO:revisit
+        setObject(parameterIndex, v, targetSqlType);
     }
 
     @Override
     public void setObject(int parameterIndex, Object v, SQLType targetSqlType, int scaleOrLength) throws SQLException {
-        setObject(parameterIndex, v, targetSqlType.getVendorTypeNumber()); // TODO:revisit
+        if (targetSqlType == null) {
+            setObject(parameterIndex, v);
+        } else {
+            setObject(parameterIndex, v, targetSqlType.getVendorTypeNumber());
+        }
     }
 
     // Unsupported

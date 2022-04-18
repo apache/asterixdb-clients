@@ -20,7 +20,6 @@
 package org.apache.asterix.jdbc.core;
 
 import java.sql.ParameterMetaData;
-import java.sql.Types;
 import java.util.Objects;
 
 public class ADBParameterMetaData extends ADBWrapperSupport implements ParameterMetaData {
@@ -46,12 +45,12 @@ public class ADBParameterMetaData extends ADBWrapperSupport implements Parameter
 
     @Override
     public int getParameterType(int parameterIndex) {
-        return Types.OTHER; // any
+        return ADBDatatype.ANY.getJdbcType().getVendorTypeNumber();
     }
 
     @Override
     public String getParameterTypeName(int parameterIndex) {
-        return "";
+        return ADBDatatype.ANY.getTypeName();
     }
 
     @Override
