@@ -72,7 +72,9 @@
     <commons-collections4.version>4.4</commons-collections4.version>
     <httpcore.version>4.4.14</httpcore.version>
     <httpclient.version>4.5.13</httpclient.version>
-    <jackson-core.version>2.12.4</jackson-core.version>
+    <jackson-core.version>2.13.2</jackson-core.version>
+    <jackson-annotations.version>2.13.2</jackson-annotations.version>
+    <jackson-databind.version>2.13.2.2</jackson-databind.version>
     <junit.version>4.13</junit.version>
   </properties>
 
@@ -458,7 +460,7 @@
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-databind</artifactId>
-        <version>${jackson-core.version}</version>
+        <version>${jackson-databind.version}</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
@@ -468,7 +470,7 @@
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-annotations</artifactId>
-        <version>${jackson-core.version}</version>
+        <version>${jackson-annotations.version}</version>
       </dependency>
       <dependency>
         <groupId>junit</groupId>
