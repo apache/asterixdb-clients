@@ -75,7 +75,7 @@
     <jackson-core.version>2.13.2</jackson-core.version>
     <jackson-annotations.version>2.13.2</jackson-annotations.version>
     <jackson-databind.version>2.13.2.2</jackson-databind.version>
-    <junit.version>4.13</junit.version>
+    <junit.version>4.13.2</junit.version>
   </properties>
 
   <build>
