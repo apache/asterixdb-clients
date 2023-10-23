@@ -60,6 +60,7 @@ public class ADBConnection extends ADBWrapperSupport implements Connection {
     private volatile ADBMetaStatement metaStatement;
     private volatile String catalog;
     private volatile String schema;
+    private final boolean databaseEntitySupported;
 
     // Lifecycle
 
@@ -76,20 +77,31 @@ public class ADBConnection extends ADBWrapperSupport implements Connection {
         this.catalogDataverseMode = getCatalogDataverseMode(properties, protocol.getErrorReporter());
         this.catalogIncludesSchemaless =
                 (Boolean) ADBDriverProperty.Common.CATALOG_INCLUDES_SCHEMALESS.fetchPropertyValue(properties);
+        this.databaseEntitySupported = checkDatabaseEntitySupport();
         initCatalogSchema(protocol, dataverseCanonicalName);
     }
 
     protected void initCatalogSchema(ADBProtocolBase protocol, String dataverseCanonicalName) throws SQLException {
         switch (catalogDataverseMode) {
             case CATALOG:
-                catalog = dataverseCanonicalName == null || dataverseCanonicalName.isEmpty()
-                        ? protocol.getDefaultDataverse() : dataverseCanonicalName;
+                if (dataverseCanonicalName == null || dataverseCanonicalName.isEmpty()) {
+                    catalog = isDatabaseEntitySupported()
+                            ? protocol.getDefaultDatabase() + "/" + protocol.getDefaultDataverse()
+                            : protocol.getDefaultDataverse();
+                } else {
+                    catalog = dataverseCanonicalName;
+                }
                 // schema = null
                 break;
             case CATALOG_SCHEMA:
                 if (dataverseCanonicalName == null || dataverseCanonicalName.isEmpty()) {
-                    catalog = protocol.getDefaultDataverse();
-                    // schema = null
+                    if (isDatabaseEntitySupported()) {
+                        catalog = protocol.getDefaultDatabase();
+                        schema = protocol.getDefaultDataverse();
+                    } else {
+                        catalog = protocol.getDefaultDataverse();
+                        // schema = null
+                    }
                 } else {
                     String[] parts = dataverseCanonicalName.split("/");
                     switch (parts.length) {
@@ -609,5 +621,29 @@ public class ADBConnection extends ADBWrapperSupport implements Connection {
     @Override
     public void setClientInfo(String name, String value) throws SQLClientInfoException {
         throw getErrorReporter().errorClientInfoMethodNotSupported(Connection.class, "setClientInfo");
+    }
+
+    protected boolean checkDatabaseEntitySupport() throws SQLException {
+        checkClosed();
+
+        StringBuilder sql = new StringBuilder(256);
+        ADBStatement stmt = createStatementImpl();
+
+        sql.append("select count(*) ");
+        sql.append("from Metadata.`Dataset` ");
+        sql.append("where DataverseName='Metadata' and DatasetName='Database'");
+        ADBResultSet resultSet = stmt.executeQuery(sql.toString());
+        try {
+            if (resultSet.next()) {
+                return resultSet.getInt(1) > 0;
+            }
+            return false;
+        } finally {
+            stmt.close();
+        }
+    }
+
+    public boolean isDatabaseEntitySupported() {
+        return databaseEntitySupported;
     }
 }

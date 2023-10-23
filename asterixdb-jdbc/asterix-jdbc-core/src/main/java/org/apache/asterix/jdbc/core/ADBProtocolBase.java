@@ -62,6 +62,7 @@ public abstract class ADBProtocolBase {
     public static final String PLAN_FORMAT_STRING = "string";
 
     private static final String DEFAULT_DATAVERSE = "Default";
+    private static final String DEFAULT_DATABASE = "Default";
     private static final String OPTIONAL_TYPE_SUFFIX = "?";
     private static final String EXPLAIN_ONLY_RESULT_COLUMN_NAME = "$1";
 
@@ -257,6 +258,10 @@ public abstract class ADBProtocolBase {
 
     public String getDefaultDataverse() {
         return DEFAULT_DATAVERSE;
+    }
+
+    public String getDefaultDatabase() {
+        return DEFAULT_DATABASE;
     }
 
     public static class SubmitStatementOptions {
