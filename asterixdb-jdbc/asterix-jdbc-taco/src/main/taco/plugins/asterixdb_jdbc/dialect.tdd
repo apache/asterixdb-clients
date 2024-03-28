@@ -619,6 +619,11 @@
       <unagg-formula>%1</unagg-formula>
       <argument type='real' />
     </function>
+    <function group='aggregate' name='MEDIAN' return-type='real'>
+      <formula>MEDIAN(%1)</formula>
+      <unagg-formula>%1</unagg-formula>
+      <argument type='real' />
+    </function>
     <function group='aggregate' name='COUNT' return-type='int'>
       <formula>COUNT(%1)</formula>
       <unagg-formula>(CASE WHEN %1 IS UNKNOWN THEN 0 ELSE 1 END)</unagg-formula>
@@ -1386,6 +1391,7 @@
     <aggregation value='AGG_STDEVP'/>
     <aggregation value='AGG_VAR'/>
     <aggregation value='AGG_VARP'/>
+    <aggregation value='AGG_MEDIAN'/>
 
     <aggregation value='AGG_YEAR'/>
     <aggregation value='AGG_QTR'/>
