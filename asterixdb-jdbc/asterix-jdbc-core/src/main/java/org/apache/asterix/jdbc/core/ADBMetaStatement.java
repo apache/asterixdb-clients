@@ -129,6 +129,7 @@ public class ADBMetaStatement extends ADBStatement {
                 if (connection.isDatabaseEntitySupported()) {
                     sql.append("TABLE_CATALOG = DatabaseName, ");
                     sql.append("TABLE_SCHEM = DataverseName ");
+                    sql.append("where true ");
                 } else {
                     sql.append("name = decode_dataverse_name(DataverseName), ");
                     sql.append("TABLE_CATALOG = name[0], ");
