@@ -72,6 +72,7 @@
     <build.taco.file>${project.build.directory}/${build.taco.filename}</build.taco.file>
     <build.venv.directory>${project.build.directory}/venv</build.venv.directory>
     <build.venv.python.path>${build.venv.directory}/bin/python</build.venv.python.path>
+    <build.venv.pip.path>${build.venv.directory}/bin/pip</build.venv.pip.path>
   </properties>
 
   <build>
@@ -169,6 +170,28 @@
                 <argument>venv</argument>
                 <argument>${build.venv.directory}</argument>
               </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>dep-install</id>
+            <phase>${build.taco.init.sdk.stage}</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>${build.venv.pip.path}</executable>
+              <workingDirectory>${build.venv.directory}</workingDirectory>
+              <arguments>
+                <argument>install</argument>
+                <argument>setuptools</argument>
+                <argument>packaging==25.0</argument>
+                <argument>xmlschema==4.3.1</argument>
+                <argument>defusedxml==0.7.1</argument>
+              </arguments>
+              <environmentVariables>
+                <VIRTUALENV>${build.venv.directory}</VIRTUALENV>
+                <PATH>${build.venv.directory}${file.separator}bin:${path.separator}${env.PATH}</PATH>
+              </environmentVariables>
             </configuration>
           </execution>
           <execution>
