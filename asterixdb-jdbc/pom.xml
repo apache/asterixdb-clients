@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>18</version>
+    <version>37</version>
     <relativePath />
   </parent>
   <licenses>
@@ -67,14 +67,14 @@
     <implementation.version>${project.version}</implementation.version>
     <implementation.vendor>${project.organization.name}</implementation.vendor>
 
-    <hyracks.version>0.3.7.1</hyracks.version>
-    <commons-lang3.version>3.12.0</commons-lang3.version>
+    <hyracks.version>0.3.9</hyracks.version>
+    <commons-lang3.version>3.20.0</commons-lang3.version>
     <commons-collections4.version>4.4</commons-collections4.version>
-    <httpcore.version>4.4.14</httpcore.version>
-    <httpclient.version>4.5.13</httpclient.version>
-    <jackson-core.version>2.13.2</jackson-core.version>
-    <jackson-annotations.version>2.13.2</jackson-annotations.version>
-    <jackson-databind.version>2.13.2.2</jackson-databind.version>
+    <httpcore.version>4.4.16</httpcore.version>
+    <httpclient.version>4.5.14</httpclient.version>
+    <jackson-core.version>2.19.4</jackson-core.version>
+    <jackson-annotations.version>${jackson-core.version}</jackson-annotations.version>
+    <jackson-databind.version>${jackson-core.version}</jackson-databind.version>
     <junit.version>4.13.2</junit.version>
   </properties>
 
@@ -356,7 +356,7 @@
         <plugin>
           <groupId>net.revelc.code</groupId>
           <artifactId>impsort-maven-plugin</artifactId>
-          <version>1.2.0</version>
+          <version>1.12.0</version>
         </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
@@ -421,7 +421,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-shade-plugin</artifactId>
-          <version>3.2.4</version>
+          <version>3.6.1</version>
         </plugin>
         <plugin>
           <groupId>org.apache.hyracks</groupId>
