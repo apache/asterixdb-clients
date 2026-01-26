@@ -26,17 +26,20 @@
     <selection-group>
       ${taco.plugin.auth.none}
       <option value="auth-user-pass" label="Username and Password"/>
+      ${taco.plugin.auth.other}
     </selection-group>
   </field>
 
   <field name="username" label="Username" category="authentication" value-type="string">
     <conditions>
+      ${taco.plugin.auth.userpass.condition}
       <condition field="authentication" value="auth-user-pass"/>
     </conditions>
   </field>
 
   <field name="password" label="Password" category="authentication" value-type="string" secure="true">
     <conditions>
+      ${taco.plugin.auth.userpass.condition}
       <condition field="authentication" value="auth-user-pass"/>
     </conditions>
   </field>
