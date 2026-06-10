@@ -87,4 +87,5 @@
   <connection-metadata file='connection-metadata.xml'/>
   <connection-resolver file="connectionResolver.tdr"/>
   <dialect file='dialect.tdd'/>
+  ${taco.plugin.oauth.config}
 </connector-plugin>

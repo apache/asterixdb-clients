@@ -58,6 +58,8 @@
     <taco.plugin.fields.custom/>
     <taco.plugin.norm.attributes.custom/>
     <taco.plugin.jdbc.properties.custom/>
+    <!-- Optional <oauth-config .../> element; empty unless the consumer enables OAuth. -->
+    <taco.plugin.oauth.config/>
 
     <taco.sourceDirectory>${project.basedir}/src/main/taco</taco.sourceDirectory>
 
